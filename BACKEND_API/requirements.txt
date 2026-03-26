@@ -1,0 +1,8 @@
+fastapi 
+uvicorn
+fastapi-cache2
+psycopg2-binary
+pydantic
+python-jose
+passlib[bcrypt]
+jinja2

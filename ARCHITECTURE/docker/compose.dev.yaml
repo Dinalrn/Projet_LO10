@@ -1,0 +1,63 @@
+#  DOCKER-COMPOSE FILE : DEV ENVIRONMENT
+
+version: "3.8"
+
+services:
+  # BACKEND API
+  backend-api-service:
+    build:
+      context: ../../BACKEND_API/
+      dockerfile: Dockerfile
+    command: uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: "True"
+    networks:
+      - template-network
+
+  # FRONTEND
+  frontend-service:
+    build:
+      context: ../../FRONTEND/front-app/
+      dockerfile: dev.Dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - template-network
+
+  # DATABASES
+  #SQL 
+  postgres-service:
+    image: postgres:15.1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: application_database
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_service_data:/var/lib/postgresql/data
+      - ../init-scripts/postgres-init-script.sql:/docker-entrypoint-initdb.d/postgres-init-script.sql:ro
+
+    networks:
+      - template-network
+
+  # Adminer (DEV ONLY)
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-service
+    networks:
+      - template-network
+
+
+networks:
+  template-network:
+    driver: bridge
+
+volumes:
+  postgres_service_data:
+
