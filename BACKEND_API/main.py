@@ -1,5 +1,8 @@
 # main.py - Exemple API main script
 
+#Route event 
+from routes.events import router as events_router
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from configuration import settings
@@ -91,6 +94,10 @@ app.include_router(test)
 app.include_router(testid)
 app.include_router(postgre_router)
 app.include_router(auth_router)
+#ajout pr ev 
+app.include_router(events_router)
+
+
 
 
 # Root Route 
