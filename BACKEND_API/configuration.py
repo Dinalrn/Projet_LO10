@@ -24,3 +24,6 @@ class secrets :
 
     JWT_SECRET_KEY = "SUPER_SECRET"
 
+# Config API ticketmaster 
+TICKETMASTER_API_KEY = "YOUR_API_KEY"
+BASE_URL = "https://app.ticketmaster.com/discovery/v2/events.json"
