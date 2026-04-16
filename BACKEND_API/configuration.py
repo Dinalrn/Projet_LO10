@@ -15,8 +15,8 @@ class settings :
     ALGORITHM = "HS256"
 
     # envent api route Ticketmaster
-    TICKETMASTER_API_KEY = os.getenv(TICKETMASTER_API_KEY)
-    BASE_URL = "https://app.ticketmaster.com/discovery/v2/events.json"
+    TICKETMASTER_API_KEY = os.getenv("TICKETMASTER_API_KEY")
+    BASE_URL = "https://app.ticketmaster.com/discovery/v1/events.json"
 
 # env secret class
 class secrets :
