@@ -15,7 +15,7 @@ from middlewares.jwt_middleware import jwt_auth_middleware
 
 from routes.test import test
 from routes.testid import testid
-from routes.postgre_interactions import postgre_router
+# from routes.postgre_interactions import postgre_router
 from routes.auth import router as auth_router
 
 logger = Logger.get_logger("API main")
@@ -92,7 +92,7 @@ async def auth_test():
 # ROUTING
 app.include_router(test)
 app.include_router(testid)
-app.include_router(postgre_router)
+# app.include_router(postgre_router)
 app.include_router(auth_router)
 #ajout pr ev 
 app.include_router(events_router)

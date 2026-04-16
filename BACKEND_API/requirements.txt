@@ -6,3 +6,4 @@ pydantic
 python-jose
 passlib[bcrypt]
 jinja2
+requests

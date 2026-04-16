@@ -2,8 +2,7 @@ import requests
 from configuration import settings 
 
 def fetch_events(city):
-
-    url = f"{BASE_URL}?apikey={TICKETMASTER_API_KEY}&city={city}"
+    url = f"{settings.BASE_URL}?apikey={settings.TICKETMASTER_API_KEY}&city={city}"
 
     response = requests.get(url)
 

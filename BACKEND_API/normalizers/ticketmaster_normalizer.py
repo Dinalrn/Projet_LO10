@@ -1,4 +1,4 @@
-from models.event_model import Event
+from models.events_model import Event
 
 
 def normalize_ticketmaster(events):
