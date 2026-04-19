@@ -21,6 +21,7 @@ export default function EventsPage() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [registeredIds, setRegisteredIds] = useState<Set<string>>(new Set());
   const [registeringEvent, setRegisteringEvent] = useState<Event | null>(null);
+  const [pendingFriends, setPendingFriends] = useState(0);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -44,6 +45,11 @@ export default function EventsPage() {
           setRegisteredIds(new Set(d.registrations.map((r: Registration) => r.event_data.id)));
         }
       })
+      .catch(() => null);
+
+    fetch("/api/friends")
+      .then((r) => r.json())
+      .then((d) => setPendingFriends(d.pending_received?.length ?? 0))
       .catch(() => null);
   }, []);
 
@@ -131,6 +137,17 @@ export default function EventsPage() {
                        hover:border-violet-400 hover:text-violet-600 transition
                        dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500 dark:hover:text-violet-400">
               Going{registeredIds.size > 0 && ` (${registeredIds.size})`}
+            </Link>
+            <Link href="/friends" className="relative rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
+                       hover:border-violet-400 hover:text-violet-600 transition
+                       dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500 dark:hover:text-violet-400">
+              Friends
+              {pendingFriends > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center
+                                 rounded-full bg-violet-600 text-[10px] font-bold text-white">
+                  {pendingFriends}
+                </span>
+              )}
             </Link>
           </nav>
         </header>

@@ -32,5 +32,5 @@ export async function middleware(request: NextRequest) {
 export const config = {
   // Protect the event list page and the map page.
   // /api/auth/* and /login are NOT matched, so they stay public.
-  matcher: ["/pages/:path*", "/map/:path*", "/saved/:path*", "/saved", "/registered/:path*", "/registered"],
+  matcher: ["/pages/:path*", "/map/:path*", "/saved/:path*", "/saved", "/registered/:path*", "/registered", "/friends/:path*", "/friends"],
 };
