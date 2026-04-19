@@ -16,7 +16,7 @@ class settings :
 
     # Ticketmaster
     TICKETMASTER_API_KEY = os.getenv("TICKETMASTER_API_KEY")
-    TICKETMASTER_BASE_URL = "https://app.ticketmaster.com/discovery/v1/events.json"
+    TICKETMASTER_BASE_URL = "https://app.ticketmaster.com/discovery/v2/events.json"
 
     # OpenAgenda (https://api.openagenda.com/v2)
     OPENAGENDA_API_KEY = os.getenv("OPENAGENDA_API_KEY")
