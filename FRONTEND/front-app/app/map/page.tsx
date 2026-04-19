@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
+import UserMenu from "@/components/UserMenu";
 import { fetchEvents } from "@/lib/api";
 import { Event, SourceStat } from "@/types/event";
 import { MapLegend } from "@/components/MapView";
@@ -13,6 +14,14 @@ const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 export default function MapPage() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [username, setUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setUsername(d.username ?? null))
+      .catch(() => null);
+  }, []);
   const [sources, setSources] = useState<Record<string, SourceStat> | null>(null);
   const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
@@ -82,6 +91,13 @@ export default function MapPage() {
         <div className="flex-1 sm:max-w-md">
           <SearchBar onSearch={handleSearch} loading={loading} />
         </div>
+
+        {/* User menu */}
+        {username && (
+          <div className="shrink-0">
+            <UserMenu username={username} />
+          </div>
+        )}
 
         {/* Stats chip */}
         {searched && !loading && (

@@ -1,52 +1,85 @@
--- File: init-scripts/postgres-init-script.sql
--- PostgreSQL database schema exemple
+-- ============================================================
+--  WannaGo – PostgreSQL schema
+--  Runs once on first container start (postgres-init-script.sql)
+-- ============================================================
 
+-- ── Extensions ───────────────────────────────────────────────
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";   -- gen_random_uuid()
 
--- 1. App configuration
-CREATE TABLE IF NOT EXISTS app_configuration (
-     is_on_premise BOOLEAN NOT NULL DEFAULT TRUE,
-     home_name TEXT
-);
-
--- 2. Users
+-- ── 1. Users ─────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
-     id SERIAL PRIMARY KEY,
-     user_name TEXT NOT NULL,
-     created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW()
+    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    username      TEXT        UNIQUE NOT NULL,
+    email         TEXT        UNIQUE NOT NULL,
+    password_hash TEXT        NOT NULL,
+    avatar_url    TEXT,
+    created_at    TIMESTAMPTZ DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Notes
-CREATE TABLE IF NOT EXISTS notes (
-    id SERIAL PRIMARY KEY,
-    message_content TEXT NOT NULL,
-    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
-    author INTEGER REFERENCES users(id)
+-- Keep updated_at current automatically
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER users_set_updated_at
+    BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- ── 2. Saved events ──────────────────────────────────────────
+-- Stores a snapshot of any event a user bookmarks.
+-- external_event_id is the id coming from the source API (Ticketmaster, etc.)
+CREATE TABLE IF NOT EXISTS saved_events (
+    id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id           UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    external_event_id TEXT        NOT NULL,
+    source            TEXT        NOT NULL,
+    event_data        JSONB       NOT NULL,    -- full event snapshot
+    saved_at          TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (user_id, external_event_id)
 );
 
--- 4. 
-CREATE TABLE IF NOT EXISTS contacts (
-     id SERIAL PRIMARY KEY,
-     added_by INTEGER REFERENCES users(id),
-     contacts_name TEXT NOT NULL,
-     contacts_mail TEXT,
-     contacts_number TEXT
+CREATE INDEX IF NOT EXISTS idx_saved_events_user ON saved_events(user_id);
+
+-- ── 3. Event registrations ───────────────────────────────────
+-- A user can RSVP / register for an event.
+-- Separate from saved_events: "interested" vs "going".
+CREATE TABLE IF NOT EXISTS event_registrations (
+    id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id           UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    external_event_id TEXT        NOT NULL,
+    source            TEXT        NOT NULL,
+    event_data        JSONB       NOT NULL,    -- full event snapshot at registration time
+    registered_at     TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (user_id, external_event_id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_event_registrations_user ON event_registrations(user_id);
 
--- EXEMPLE
--- CREATE TABLE IF NOT EXISTS XXX (
---     id SERIAL PRIMARY KEY,
---     url TEXT UNIQUE NOT NULL,
---     domain TEXT NOT NULL,
---     timestamp TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
---     s3_path TEXT,
---     content_hash TEXT UNIQUE NOT NULL,
---     http_status INTEGER,
---     content_type TEXT NOT NULL DEFAULT 'text/html',
---     processing_status TEXT NOT NULL DEFAULT 'pending',
---     updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
---     analyzed BOOLEAN NOT NULL DEFAULT FALSE,
---     is_homepage BOOLEAN NOT NULL DEFAULT FALSE,
---     notes TEXT
--- );
+-- ── 4. Friendships ───────────────────────────────────────────
+-- Directed friendship request: requester → addressee.
+-- status: 'pending' | 'accepted' | 'blocked'
+-- Accepted friendship means both directions are considered friends.
+CREATE TABLE IF NOT EXISTS friendships (
+    id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    requester_id  UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    addressee_id  UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status        TEXT        NOT NULL DEFAULT 'pending'
+                              CHECK (status IN ('pending', 'accepted', 'blocked')),
+    created_at    TIMESTAMPTZ DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (requester_id, addressee_id),
+    CHECK (requester_id <> addressee_id)
+);
+
+CREATE TRIGGER friendships_set_updated_at
+    BEFORE UPDATE ON friendships
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Index to quickly find all friendships for a given user (either side)
+CREATE INDEX IF NOT EXISTS idx_friendships_requester ON friendships(requester_id);
+CREATE INDEX IF NOT EXISTS idx_friendships_addressee ON friendships(addressee_id);

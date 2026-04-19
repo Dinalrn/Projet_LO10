@@ -50,10 +50,10 @@ services:
       - template-network
 
   # Adminer (DEV ONLY)
-  adminer:
+  adminer-wannago:
     image: adminer
     ports:
-      - "8080:8080"
+      - "8090:8080"
     depends_on:
       - postgres-service
     networks:

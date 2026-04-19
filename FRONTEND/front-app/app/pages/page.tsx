@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import EventList from "@/components/EventList";
+import UserMenu from "@/components/UserMenu";
 import { fetchEvents } from "@/lib/api";
 import { Event, SourceStat } from "@/types/event";
 
@@ -14,6 +15,14 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setUsername(d.username ?? null))
+      .catch(() => null);
+  }, []);
 
   const handleSearch = async (query: string) => {
     setLoading(true);
@@ -40,6 +49,9 @@ export default function EventsPage() {
 
         {/* ── Header ── */}
         <header className="mb-12 text-center">
+          <div className="flex justify-end mb-2">
+            {username && <UserMenu username={username} />}
+          </div>
           <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
             Wanna<span className="text-violet-600">Go</span>
           </h1>
