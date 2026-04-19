@@ -1,13 +1,12 @@
 # normalizers/datatourisme_normalizer.py
-# Maps DataTourisme REST API v1 POI objects to the unified Event schema.
+# Maps DataTourisme REST API v1 /catalog POI objects to the unified Event schema.
 #
-# Relevant POI fields (from /entertainmentAndEvent):
+# Key POI fields used:
 #   uuid, label, type
-#   takesPlaceAt[].startDate / startTime / endDate
-#   isLocatedAt[].geo.latitude / .longitude
-#   isLocatedAt[].address.hasAddressCity.label
-#   hasDescription[].shortDescription / .description
-#   hasMainRepresentation[].url (or nested hasRelatedResource)
+#   takesPlaceAt[]:  startDate, startTime
+#   isLocatedAt[]:   geo.{latitude,longitude}, label, address[].hasAddressCity.label
+#   hasDescription[]: shortDescription, description (multilingual dicts)
+#   hasMainRepresentation[]: url/uri or hasRelatedResource[].url
 #   offers[].priceSpecification[].minPrice
 
 from models.events_model import Event
@@ -27,6 +26,27 @@ def _label(val, lang: str = "fr") -> str:
     return str(val)
 
 
+def _extract_type(type_val) -> str:
+    """
+    Extract a readable category name from the type field.
+    The API may return a full URI like 'https://...ontology/core/1.0/#Festival'
+    or a simple string like 'Festival'.
+    """
+    if not type_val:
+        return "Événement"
+    if isinstance(type_val, list):
+        type_val = type_val[0] if type_val else ""
+    if not isinstance(type_val, str):
+        return "Événement"
+    # Strip URI fragment: "https://...#Festival" → "Festival"
+    if "#" in type_val:
+        return type_val.split("#")[-1]
+    # Strip URI path: "https://.../Festival" → "Festival"
+    if "/" in type_val:
+        return type_val.rstrip("/").split("/")[-1]
+    return type_val
+
+
 def _extract_image(media_list) -> str:
     """Pull the first usable image URL from hasMainRepresentation."""
     if isinstance(media_list, dict):
@@ -34,14 +54,17 @@ def _extract_image(media_list) -> str:
     for m in (media_list or []):
         if not isinstance(m, dict):
             continue
-        # Direct url field
         url = m.get("url") or m.get("uri") or ""
         if url:
             return str(url)
-        # Nested inside hasRelatedResource (ebucore vocabulary)
         for resource in (m.get("hasRelatedResource") or []):
             if isinstance(resource, dict):
-                url = resource.get("url") or resource.get("uri") or resource.get("ebucore:locator") or ""
+                url = (
+                    resource.get("url")
+                    or resource.get("uri")
+                    or resource.get("ebucore:locator")
+                    or ""
+                )
                 if url:
                     return str(url)
     return ""
@@ -69,20 +92,24 @@ def normalize_datatourisme(events: list) -> list:
 
     for e in events:
         try:
-            # ── Title ──────────────────────────────────────────────────────────
+            # ── Title ─────────────────────────────────────────────────────────
             title = _label(e.get("label"))
 
-            # ── Description ────────────────────────────────────────────────────
+            # ── Description ───────────────────────────────────────────────────
             description = ""
             for desc in (e.get("hasDescription") or []):
                 if not isinstance(desc, dict):
                     continue
+                # shortDescription and description can be multilingual dicts
                 text = _label(desc.get("shortDescription") or desc.get("description"))
                 if text:
                     description = text
                     break
+            # Fall back to top-level comment field if no hasDescription
+            if not description:
+                description = _label(e.get("comment") or "")
 
-            # ── Dates ──────────────────────────────────────────────────────────
+            # ── Dates ─────────────────────────────────────────────────────────
             date, time = "", ""
             timings = e.get("takesPlaceAt") or []
             if isinstance(timings, dict):
@@ -94,24 +121,33 @@ def normalize_datatourisme(events: list) -> list:
                 raw_time = first.get("startTime", "")
                 time = str(raw_time)[:5] if raw_time else ""
 
-            # ── Location ───────────────────────────────────────────────────────
+            # ── Location ──────────────────────────────────────────────────────
             lat, lon, venue_name, city_name = "", "", "", ""
             locations = e.get("isLocatedAt") or []
             if isinstance(locations, dict):
                 locations = [locations]
             if locations:
                 loc = locations[0]
+
                 geo = loc.get("geo") or {}
                 lat = str(geo.get("latitude", ""))
                 lon = str(geo.get("longitude", ""))
-                venue_name = _label(loc.get("label") or {})
-                addr = loc.get("address") or {}
-                city_obj = addr.get("hasAddressCity") or {}
-                city_name = _label(city_obj.get("label") if isinstance(city_obj, dict) else city_obj)
 
-            # ── Category ───────────────────────────────────────────────────────
-            # `type` is a controlled vocabulary value (e.g. "Festival", "Concert")
-            category = _label(e.get("type") or "Événement")
+                venue_name = _label(loc.get("label") or {})
+
+                # address is an *array* of objects per the schema
+                addr_raw = loc.get("address") or []
+                if isinstance(addr_raw, dict):
+                    addr_raw = [addr_raw]
+                addr = addr_raw[0] if addr_raw else {}
+
+                city_obj = addr.get("hasAddressCity") or {}
+                city_name = _label(
+                    city_obj.get("label") if isinstance(city_obj, dict) else city_obj
+                )
+
+            # ── Category ──────────────────────────────────────────────────────
+            category = _extract_type(e.get("type"))
 
             event = Event(
                 id=f"dt-{e.get('uuid', '')}",
