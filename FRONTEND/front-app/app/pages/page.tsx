@@ -5,8 +5,9 @@ import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import EventList from "@/components/EventList";
 import UserMenu from "@/components/UserMenu";
+import RegisterModal from "@/components/RegisterModal";
 import { fetchEvents } from "@/lib/api";
-import { Event, SourceStat } from "@/types/event";
+import { Event, Registration, SourceStat } from "@/types/event";
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -16,7 +17,10 @@ export default function EventsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
+
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [registeredIds, setRegisteredIds] = useState<Set<string>>(new Set());
+  const [registeringEvent, setRegisteringEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -32,17 +36,22 @@ export default function EventsPage() {
         }
       })
       .catch(() => null);
+
+    fetch("/api/registrations")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.registrations)) {
+          setRegisteredIds(new Set(d.registrations.map((r: Registration) => r.event_data.id)));
+        }
+      })
+      .catch(() => null);
   }, []);
 
   const handleToggleSave = useCallback(async (event: Event) => {
     const isSaved = savedIds.has(event.id);
     if (isSaved) {
       await fetch(`/api/saved-events/${encodeURIComponent(event.id)}`, { method: "DELETE" });
-      setSavedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(event.id);
-        return next;
-      });
+      setSavedIds((prev) => { const n = new Set(prev); n.delete(event.id); return n; });
     } else {
       await fetch("/api/saved-events", {
         method: "POST",
@@ -52,6 +61,17 @@ export default function EventsPage() {
       setSavedIds((prev) => new Set(prev).add(event.id));
     }
   }, [savedIds]);
+
+  const handleConfirmRegister = useCallback(async (visitDate: string, visitTime: string) => {
+    if (!registeringEvent) return;
+    await fetch("/api/registrations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: registeringEvent, visit_date: visitDate, visit_time: visitTime || null }),
+    });
+    setRegisteredIds((prev) => new Set(prev).add(registeringEvent.id));
+    setRegisteringEvent(null);
+  }, [registeringEvent]);
 
   const handleSearch = async (query: string) => {
     setLoading(true);
@@ -74,6 +94,14 @@ export default function EventsPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {registeringEvent && (
+        <RegisterModal
+          event={registeringEvent}
+          onConfirm={handleConfirmRegister}
+          onClose={() => setRegisteringEvent(null)}
+        />
+      )}
+
       <div className="mx-auto max-w-7xl px-4 py-16">
 
         {/* ── Header ── */}
@@ -88,26 +116,21 @@ export default function EventsPage() {
             Discover what&apos;s happening near you
           </p>
           <nav className="mt-4 flex justify-center gap-2 text-sm font-medium">
-            <span className="rounded-lg bg-violet-600 px-4 py-1.5 text-white">
-              List
-            </span>
-            <Link
-              href="/map"
-              className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
-                         hover:border-violet-400 hover:text-violet-600 transition
-                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400"
-            >
+            <span className="rounded-lg bg-violet-600 px-4 py-1.5 text-white">List</span>
+            <Link href="/map" className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
+                       hover:border-violet-400 hover:text-violet-600 transition
+                       dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500 dark:hover:text-violet-400">
               Map
             </Link>
-            <Link
-              href="/saved"
-              className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
-                         hover:border-violet-400 hover:text-violet-600 transition
-                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400"
-            >
+            <Link href="/saved" className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
+                       hover:border-violet-400 hover:text-violet-600 transition
+                       dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500 dark:hover:text-violet-400">
               Saved{savedIds.size > 0 && ` (${savedIds.size})`}
+            </Link>
+            <Link href="/registered" className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
+                       hover:border-violet-400 hover:text-violet-600 transition
+                       dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500 dark:hover:text-violet-400">
+              Going{registeredIds.size > 0 && ` (${registeredIds.size})`}
             </Link>
           </nav>
         </header>
@@ -115,7 +138,7 @@ export default function EventsPage() {
         {/* ── Search ── */}
         <SearchBar onSearch={handleSearch} loading={loading} />
 
-        {/* ── Source stats (after search) ── */}
+        {/* ── Source stats ── */}
         {sources && !loading && (
           <div className="mt-6 flex flex-wrap justify-center gap-2">
             {Object.entries(sources).map(([name, stat]) => (
@@ -137,10 +160,7 @@ export default function EventsPage() {
         {loading && (
           <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-64 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800"
-              />
+              <div key={i} className="h-64 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800" />
             ))}
           </div>
         )}
@@ -170,7 +190,13 @@ export default function EventsPage() {
               {events.length} event{events.length > 1 ? "s" : ""} found in{" "}
               <span className="font-semibold text-gray-700 dark:text-gray-300">{city}</span>
             </p>
-            <EventList events={events} savedIds={savedIds} onToggleSave={handleToggleSave} />
+            <EventList
+              events={events}
+              savedIds={savedIds}
+              onToggleSave={handleToggleSave}
+              registeredIds={registeredIds}
+              onRegister={setRegisteringEvent}
+            />
           </section>
         )}
 

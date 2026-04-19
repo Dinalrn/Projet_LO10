@@ -23,6 +23,12 @@ export interface SourceStat {
   count: number;
 }
 
+export interface Registration {
+  event_data: Event;
+  visit_date: string;   // "YYYY-MM-DD"
+  visit_time: string | null; // "HH:MM" or null
+}
+
 export interface EventsResponse {
   city: string;
   total: number;

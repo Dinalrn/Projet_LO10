@@ -78,6 +78,15 @@ export default function SavedEventsPage() {
             <span className="rounded-lg bg-violet-600 px-4 py-1.5 text-white">
               Saved
             </span>
+            <Link
+              href="/registered"
+              className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
+                         hover:border-violet-400 hover:text-violet-600 transition
+                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
+                         dark:hover:text-violet-400"
+            >
+              Going
+            </Link>
           </nav>
         </header>
 

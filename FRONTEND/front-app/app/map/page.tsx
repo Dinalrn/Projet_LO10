@@ -7,7 +7,7 @@ import SearchBar from "@/components/SearchBar";
 import UserMenu from "@/components/UserMenu";
 import { fetchEvents } from "@/lib/api";
 import { Event, SourceStat } from "@/types/event";
-import { MapLegend } from "@/components/MapView";
+import { MapLegend } from "@/components/MapLegend";
 
 /* Leaflet must not run on the server */
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });

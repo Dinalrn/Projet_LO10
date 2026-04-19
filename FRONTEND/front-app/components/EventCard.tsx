@@ -7,6 +7,8 @@ interface Props {
   event: Event;
   isSaved?: boolean;
   onToggleSave?: (event: Event) => Promise<void>;
+  isRegistered?: boolean;
+  onRegister?: (event: Event) => void;
 }
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -37,7 +39,7 @@ function formatDate(date: string, time: string): string {
   }
 }
 
-export default function EventCard({ event, isSaved = false, onToggleSave }: Props) {
+export default function EventCard({ event, isSaved = false, onToggleSave, isRegistered = false, onRegister }: Props) {
   const { title, description, category, date, time, location, price, image, source } = event;
   const [saving, setSaving] = useState(false);
 
@@ -81,31 +83,56 @@ export default function EventCard({ event, isSaved = false, onToggleSave }: Prop
           </span>
         )}
 
-        {/* Bookmark button */}
-        {onToggleSave && (
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            aria-label={isSaved ? "Remove from saved" : "Save event"}
-            className="absolute top-2 right-2 rounded-full bg-black/60 p-1.5 backdrop-blur-sm
-                       transition hover:bg-black/80 disabled:opacity-50"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill={isSaved ? "white" : "none"}
-              stroke="white"
-              strokeWidth={2}
+        {/* Action buttons — bookmark + register */}
+        <div className="absolute top-2 right-2 flex gap-1.5">
+          {onToggleSave && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              aria-label={isSaved ? "Remove from saved" : "Save event"}
+              className="rounded-full bg-black/60 p-1.5 backdrop-blur-sm
+                         transition hover:bg-black/80 disabled:opacity-50"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-7-3.5L5 21V5z"
-              />
-            </svg>
-          </button>
-        )}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill={isSaved ? "white" : "none"}
+                stroke="white"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-7-3.5L5 21V5z"
+                />
+              </svg>
+            </button>
+          )}
+          {onRegister && (
+            <button
+              onClick={() => onRegister(event)}
+              aria-label={isRegistered ? "Already registered" : "Register for event"}
+              className={`rounded-full p-1.5 backdrop-blur-sm transition hover:bg-black/80
+                ${isRegistered ? "bg-violet-600/90" : "bg-black/60"}`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="white"
+                strokeWidth={2}
+              >
+                <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                <line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" />
+                <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" />
+                <line x1="3" y1="10" x2="21" y2="10" strokeLinecap="round" />
+                {isRegistered && <path strokeLinecap="round" strokeLinejoin="round" d="M8 14l2.5 2.5L16 13" />}
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Body */}

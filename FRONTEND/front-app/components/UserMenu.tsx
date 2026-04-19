@@ -24,13 +24,6 @@ export default function UserMenu({ username }: Props) {
       <span className="text-sm text-gray-400">
         <span className="font-semibold text-white">{username}</span>
       </span>
-      <Link
-        href="/saved"
-        className="rounded-lg border border-gray-700 px-3 py-1.5 text-xs font-medium
-                   text-gray-300 hover:border-violet-500 hover:text-violet-400 transition"
-      >
-        Saved
-      </Link>
       <button
         onClick={handleLogout}
         disabled={loading}

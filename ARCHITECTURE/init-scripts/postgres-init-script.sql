@@ -46,14 +46,18 @@ CREATE TABLE IF NOT EXISTS saved_events (
 CREATE INDEX IF NOT EXISTS idx_saved_events_user ON saved_events(user_id);
 
 -- ── 3. Event registrations ───────────────────────────────────
--- A user can RSVP / register for an event.
+-- A user can RSVP / register for an event ("I'm going").
 -- Separate from saved_events: "interested" vs "going".
+-- visit_date / visit_time: when the user plans to attend.
+--   If the event has a fixed date the frontend pre-fills these; otherwise the user picks them.
 CREATE TABLE IF NOT EXISTS event_registrations (
     id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id           UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     external_event_id TEXT        NOT NULL,
     source            TEXT        NOT NULL,
     event_data        JSONB       NOT NULL,    -- full event snapshot at registration time
+    visit_date        DATE        NOT NULL,    -- day the user plans to attend
+    visit_time        TIME,                   -- optional time slot the user chose
     registered_at     TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE (user_id, external_event_id)
 );
