@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import EventList from "@/components/EventList";
 import { fetchEvents } from "@/lib/api";
@@ -45,6 +46,20 @@ export default function EventsPage() {
           <p className="mt-3 text-lg text-gray-500 dark:text-gray-400">
             Discover what&apos;s happening near you
           </p>
+          <nav className="mt-4 flex justify-center gap-2 text-sm font-medium">
+            <span className="rounded-lg bg-violet-600 px-4 py-1.5 text-white">
+              List
+            </span>
+            <Link
+              href="/map"
+              className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
+                         hover:border-violet-400 hover:text-violet-600 transition
+                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
+                         dark:hover:text-violet-400"
+            >
+              Map
+            </Link>
+          </nav>
         </header>
 
         {/* ── Search ── */}
