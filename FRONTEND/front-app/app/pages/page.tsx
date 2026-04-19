@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import EventList from "@/components/EventList";
@@ -16,13 +16,42 @@ export default function EventsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => setUsername(d.username ?? null))
       .catch(() => null);
+
+    fetch("/api/saved-events")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.events)) {
+          setSavedIds(new Set(d.events.map((e: Event) => e.id)));
+        }
+      })
+      .catch(() => null);
   }, []);
+
+  const handleToggleSave = useCallback(async (event: Event) => {
+    const isSaved = savedIds.has(event.id);
+    if (isSaved) {
+      await fetch(`/api/saved-events/${encodeURIComponent(event.id)}`, { method: "DELETE" });
+      setSavedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(event.id);
+        return next;
+      });
+    } else {
+      await fetch("/api/saved-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(event),
+      });
+      setSavedIds((prev) => new Set(prev).add(event.id));
+    }
+  }, [savedIds]);
 
   const handleSearch = async (query: string) => {
     setLoading(true);
@@ -70,6 +99,15 @@ export default function EventsPage() {
                          dark:hover:text-violet-400"
             >
               Map
+            </Link>
+            <Link
+              href="/saved"
+              className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
+                         hover:border-violet-400 hover:text-violet-600 transition
+                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
+                         dark:hover:text-violet-400"
+            >
+              Saved{savedIds.size > 0 && ` (${savedIds.size})`}
             </Link>
           </nav>
         </header>
@@ -132,7 +170,7 @@ export default function EventsPage() {
               {events.length} event{events.length > 1 ? "s" : ""} found in{" "}
               <span className="font-semibold text-gray-700 dark:text-gray-300">{city}</span>
             </p>
-            <EventList events={events} />
+            <EventList events={events} savedIds={savedIds} onToggleSave={handleToggleSave} />
           </section>
         )}
 

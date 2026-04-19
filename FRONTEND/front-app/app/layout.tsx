@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "WannaGo – Discover Events",
   description: "Find events near you powered by Ticketmaster and DataTourisme",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({
