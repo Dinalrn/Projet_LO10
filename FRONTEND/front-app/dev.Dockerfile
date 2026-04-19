@@ -6,7 +6,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json* ./
 
-RUN npm ci --fetch-timeout=60000 --fetch-retries=5
+RUN npm install --fetch-timeout=60000 --fetch-retries=5
 
 COPY . .
 # COPY ./migrations ./migrations
