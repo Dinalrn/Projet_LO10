@@ -1,0 +1,113 @@
+import { Event } from "@/types/event";
+
+interface Props {
+  event: Event;
+}
+
+const SOURCE_COLORS: Record<string, string> = {
+  ticketmaster: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+  datatourisme: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
+  openagenda: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+  "data.culture.gouv.fr": "bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300",
+};
+
+function sourceBadgeClass(source: string): string {
+  return (
+    SOURCE_COLORS[source] ??
+    "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+  );
+}
+
+function formatDate(date: string, time: string): string {
+  if (!date) return "Date TBD";
+  try {
+    const d = new Date(`${date}T${time || "00:00"}`);
+    return d.toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }) + (time ? ` · ${time.slice(0, 5)}` : "");
+  } catch {
+    return date;
+  }
+}
+
+export default function EventCard({ event }: Props) {
+  const { title, description, category, date, time, location, price, image, source } = event;
+
+  return (
+    <article className="flex flex-col overflow-hidden rounded-2xl border border-gray-100
+                        bg-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5
+                        dark:border-gray-800 dark:bg-gray-900">
+      {/* Image */}
+      <div className="relative h-40 w-full bg-gray-100 dark:bg-gray-800">
+        {image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image}
+            alt={title}
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-3xl text-gray-300 dark:text-gray-600">
+            🎭
+          </div>
+        )}
+        {/* Category pill */}
+        {category && (
+          <span className="absolute top-2 left-2 rounded-full bg-black/60 px-2.5 py-0.5
+                           text-xs font-medium text-white backdrop-blur-sm">
+            {category}
+          </span>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <h2 className="line-clamp-2 text-sm font-semibold leading-snug text-gray-900 dark:text-white">
+          {title || "Untitled event"}
+        </h2>
+
+        {description && (
+          <p className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+            {description}
+          </p>
+        )}
+
+        <div className="mt-auto flex flex-col gap-1 pt-2 text-xs text-gray-500 dark:text-gray-400">
+          {/* Date */}
+          <div className="flex items-center gap-1.5">
+            <span>📅</span>
+            <span>{formatDate(date, time)}</span>
+          </div>
+
+          {/* Location */}
+          {(location.city || location.name) && (
+            <div className="flex items-center gap-1.5">
+              <span>📍</span>
+              <span className="truncate">
+                {[location.name, location.city].filter(Boolean).join(", ")}
+              </span>
+            </div>
+          )}
+
+          {/* Price */}
+          <div className="flex items-center gap-1.5">
+            <span>🎟️</span>
+            <span>{price > 0 ? `${price} €` : "Free"}</span>
+          </div>
+        </div>
+
+        {/* Source badge */}
+        <div className="pt-1">
+          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${sourceBadgeClass(source)}`}>
+            {source}
+          </span>
+        </div>
+      </div>
+    </article>
+  );
+}

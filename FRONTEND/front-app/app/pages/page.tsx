@@ -1,66 +1,115 @@
-import Image from "next/image";
-// import XXX from XXXX
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import SearchBar from "@/components/SearchBar";
+import EventList from "@/components/EventList";
+import { fetchEvents } from "@/lib/api";
+import { Event, SourceStat } from "@/types/event";
+
+export default function EventsPage() {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [sources, setSources] = useState<Record<string, SourceStat> | null>(null);
+  const [city, setCity] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searched, setSearched] = useState(false);
+
+  const handleSearch = async (query: string) => {
+    setLoading(true);
+    setError(null);
+    setSearched(true);
+    setCity(query);
+    setEvents([]);
+    setSources(null);
+
+    try {
+      const data = await fetchEvents(query);
+      setEvents(data.events ?? []);
+      setSources(data.sources ?? null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="mx-auto max-w-7xl px-4 py-16">
+
+        {/* ── Header ── */}
+        <header className="mb-12 text-center">
+          <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            Wanna<span className="text-violet-600">Go</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-3 text-lg text-gray-500 dark:text-gray-400">
+            Discover what&apos;s happening near you
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        </header>
+
+        {/* ── Search ── */}
+        <SearchBar onSearch={handleSearch} loading={loading} />
+
+        {/* ── Source stats (after search) ── */}
+        {sources && !loading && (
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {Object.entries(sources).map(([name, stat]) => (
+              <span
+                key={name}
+                className={`rounded-full px-3 py-1 text-xs font-medium border
+                  ${stat.status === "ok"
+                    ? "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400"
+                    : "border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
+                  }`}
+              >
+                {name}: {stat.count} events
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* ── Loading skeleton ── */}
+        {loading && (
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-64 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* ── Error ── */}
+        {error && !loading && (
+          <div className="mt-12 rounded-2xl border border-red-200 bg-red-50 p-6 text-center
+                          text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+            <p className="text-lg font-medium">Something went wrong</p>
+            <p className="mt-1 text-sm opacity-75">{error}</p>
+          </div>
+        )}
+
+        {/* ── Empty state ── */}
+        {!loading && !error && searched && events.length === 0 && (
+          <div className="mt-16 text-center text-gray-400 dark:text-gray-600">
+            <p className="text-4xl">🔍</p>
+            <p className="mt-3 text-lg font-medium">No events found in &ldquo;{city}&rdquo;</p>
+            <p className="mt-1 text-sm">Try a bigger city or a different spelling.</p>
+          </div>
+        )}
+
+        {/* ── Results ── */}
+        {!loading && events.length > 0 && (
+          <section className="mt-10">
+            <p className="mb-4 text-sm text-gray-400 dark:text-gray-500">
+              {events.length} event{events.length > 1 ? "s" : ""} found in{" "}
+              <span className="font-semibold text-gray-700 dark:text-gray-300">{city}</span>
+            </p>
+            <EventList events={events} />
+          </section>
+        )}
+
+      </div>
+    </main>
   );
 }

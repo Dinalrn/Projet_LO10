@@ -14,7 +14,7 @@ services:
     # depends_on:
       # - postgres-service
     env_file:
-      - ../../BACKEND_API/.env        # loads TICKETMASTER_API_KEY, OPENAGENDA_API_KEY, etc.
+      - ../../BACKEND_API/.env
     environment:
       DEBUG: "True"
     networks:
@@ -27,6 +27,8 @@ services:
       dockerfile: dev.Dockerfile
     ports:
       - "3000:3000"
+    env_file:
+      - ../../FRONTEND/.env
     networks:
       - template-network
 
