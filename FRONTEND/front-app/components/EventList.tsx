@@ -3,13 +3,26 @@ import EventCard from "./EventCard";
 
 interface Props {
   events: Event[];
+  savedIds?: Set<string>;
+  onToggleSave?: (event: Event) => Promise<void>;
+  registeredIds?: Set<string>;
+  onRegister?: (event: Event) => void;
+  onShare?: (event: Event) => void;
 }
 
-export default function EventList({ events }: Props) {
+export default function EventList({ events, savedIds, onToggleSave, registeredIds, onRegister, onShare }: Props) {
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {events.map((event) => (
-        <EventCard key={event.id} event={event} />
+        <EventCard
+          key={event.id}
+          event={event}
+          isSaved={savedIds?.has(event.id)}
+          onToggleSave={onToggleSave}
+          isRegistered={registeredIds?.has(event.id)}
+          onRegister={onRegister}
+          onShare={onShare}
+        />
       ))}
     </div>
   );
