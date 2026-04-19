@@ -13,6 +13,8 @@ services:
       - "8000:8000"
     # depends_on:
       # - postgres-service
+    env_file:
+      - ../../BACKEND_API/.env        # loads TICKETMASTER_API_KEY, OPENAGENDA_API_KEY, etc.
     environment:
       DEBUG: "True"
     networks:

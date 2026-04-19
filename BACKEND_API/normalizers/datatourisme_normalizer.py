@@ -1,24 +1,67 @@
 # normalizers/datatourisme_normalizer.py
-# Maps DataTourisme JSON-LD event objects to the unified Event schema.
+# Maps DataTourisme REST API v1 POI objects to the unified Event schema.
 #
-# DataTourisme uses the schema.org + tourism ontology vocabulary.
-# Property names look like "schema:name", "rdfs:label", "isLocatedAt", etc.
+# Relevant POI fields (from /entertainmentAndEvent):
+#   uuid, label, type
+#   takesPlaceAt[].startDate / startTime / endDate
+#   isLocatedAt[].geo.latitude / .longitude
+#   isLocatedAt[].address.hasAddressCity.label
+#   hasDescription[].shortDescription / .description
+#   hasMainRepresentation[].url (or nested hasRelatedResource)
+#   offers[].priceSpecification[].minPrice
 
 from models.events_model import Event
 
 
-def _label(obj, lang="fr") -> str:
-    """Extract a string label from a multilingual JSON-LD value."""
-    if obj is None:
+def _label(val, lang: str = "fr") -> str:
+    """Recursively extract a plain string from multilingual label structures."""
+    if not val:
         return ""
-    if isinstance(obj, str):
-        return obj
-    if isinstance(obj, list):
-        return obj[0] if obj else ""
-    if isinstance(obj, dict):
-        val = obj.get(lang) or obj.get("en") or next(iter(obj.values()), "")
-        return _label(val, lang)
-    return str(obj)
+    if isinstance(val, str):
+        return val
+    if isinstance(val, dict):
+        result = val.get(lang) or val.get("en") or next(iter(val.values()), "")
+        return _label(result, lang)
+    if isinstance(val, list):
+        return _label(val[0], lang) if val else ""
+    return str(val)
+
+
+def _extract_image(media_list) -> str:
+    """Pull the first usable image URL from hasMainRepresentation."""
+    if isinstance(media_list, dict):
+        media_list = [media_list]
+    for m in (media_list or []):
+        if not isinstance(m, dict):
+            continue
+        # Direct url field
+        url = m.get("url") or m.get("uri") or ""
+        if url:
+            return str(url)
+        # Nested inside hasRelatedResource (ebucore vocabulary)
+        for resource in (m.get("hasRelatedResource") or []):
+            if isinstance(resource, dict):
+                url = resource.get("url") or resource.get("uri") or resource.get("ebucore:locator") or ""
+                if url:
+                    return str(url)
+    return ""
+
+
+def _extract_price(offers) -> float:
+    """Return the minimum price found across all price specifications, or 0."""
+    for offer in (offers or []):
+        if not isinstance(offer, dict):
+            continue
+        for spec in (offer.get("priceSpecification") or []):
+            if not isinstance(spec, dict):
+                continue
+            min_p = spec.get("minPrice")
+            if min_p is not None:
+                try:
+                    return float(min_p)
+                except (TypeError, ValueError):
+                    pass
+    return 0.0
 
 
 def normalize_datatourisme(events: list) -> list:
@@ -26,79 +69,65 @@ def normalize_datatourisme(events: list) -> list:
 
     for e in events:
         try:
-            # --- Title ---
-            title = _label(e.get("rdfs:label") or e.get("schema:name") or e.get("dc:title"))
+            # ── Title ──────────────────────────────────────────────────────────
+            title = _label(e.get("label"))
 
-            # --- Description ---
-            description = _label(
-                e.get("shortDescription") or e.get("schema:description") or e.get("dc:description")
-            )
+            # ── Description ────────────────────────────────────────────────────
+            description = ""
+            for desc in (e.get("hasDescription") or []):
+                if not isinstance(desc, dict):
+                    continue
+                text = _label(desc.get("shortDescription") or desc.get("description"))
+                if text:
+                    description = text
+                    break
 
-            # --- Category: derive from @type, skip generic "Event" suffixes ---
-            types = e.get("@type", [])
-            if isinstance(types, str):
-                types = [types]
-            category = next(
-                (t.split(":")[-1] for t in types if "event" not in t.lower() and "thing" not in t.lower() and ":" in t),
-                "Tourisme",
-            )
+            # ── Dates ──────────────────────────────────────────────────────────
+            date, time = "", ""
+            timings = e.get("takesPlaceAt") or []
+            if isinstance(timings, dict):
+                timings = [timings]
+            if timings:
+                first = timings[0]
+                raw_date = first.get("startDate", "")
+                date = str(raw_date)[:10] if raw_date else ""
+                raw_time = first.get("startTime", "")
+                time = str(raw_time)[:5] if raw_time else ""
 
-            # --- Location ---
-            locations = e.get("isLocatedAt", [])
+            # ── Location ───────────────────────────────────────────────────────
+            lat, lon, venue_name, city_name = "", "", "", ""
+            locations = e.get("isLocatedAt") or []
             if isinstance(locations, dict):
                 locations = [locations]
-
-            lat, lon, venue_name, city = "", "", "", ""
             if locations:
                 loc = locations[0]
-                geo = loc.get("schema:geo", {})
-                lat = str(geo.get("schema:latitude", ""))
-                lon = str(geo.get("schema:longitude", ""))
+                geo = loc.get("geo") or {}
+                lat = str(geo.get("latitude", ""))
+                lon = str(geo.get("longitude", ""))
+                venue_name = _label(loc.get("label") or {})
+                addr = loc.get("address") or {}
+                city_obj = addr.get("hasAddressCity") or {}
+                city_name = _label(city_obj.get("label") if isinstance(city_obj, dict) else city_obj)
 
-                addresses = loc.get("schema:address") or loc.get("hasAddress") or []
-                if isinstance(addresses, dict):
-                    addresses = [addresses]
-                if addresses:
-                    addr = addresses[0]
-                    city = _label(addr.get("schema:addressLocality") or addr.get("addressLocality"))
-
-                venue_name = _label(loc.get("schema:name") or loc.get("rdfs:label"))
-
-            # --- Dates ---
-            date_raw = e.get("startDate") or e.get("schema:startDate") or ""
-            if isinstance(date_raw, list):
-                date_raw = date_raw[0] if date_raw else ""
-            date = str(date_raw)[:10] if date_raw else ""
-
-            # --- Image ---
-            image = ""
-            media = e.get("hasRepresentation") or e.get("schema:image") or []
-            if isinstance(media, dict):
-                media = [media]
-            if isinstance(media, list) and media:
-                first = media[0]
-                if isinstance(first, dict):
-                    raw_url = first.get("schema:url") or first.get("ebucore:locator") or ""
-                    image = raw_url[0] if isinstance(raw_url, list) else str(raw_url)
-                elif isinstance(first, str):
-                    image = first
-
-            uid = str(e.get("@id", "")).rstrip("/").split("/")[-1]
+            # ── Category ───────────────────────────────────────────────────────
+            # `type` is a controlled vocabulary value (e.g. "Festival", "Concert")
+            category = _label(e.get("type") or "Événement")
 
             event = Event(
-                id=f"dt-{uid}",
+                id=f"dt-{e.get('uuid', '')}",
                 title=title,
                 description=description,
                 category=category,
                 date=date,
-                time="",
-                location={"name": venue_name, "city": city, "lat": lat, "lon": lon},
-                price=0,
-                image=image,
+                time=time,
+                location={"name": venue_name, "city": city_name, "lat": lat, "lon": lon},
+                price=_extract_price(e.get("offers")),
+                image=_extract_image(e.get("hasMainRepresentation")),
                 source="datatourisme",
             )
             normalized.append(event.to_json())
+
         except Exception as ex:
-            print(f"[DataTourisme Normalizer] Skipping object {e.get('@id', '?')}: {ex}")
+            print(f"[DataTourisme Normalizer] Skipping {e.get('uuid', '?')}: {ex}")
 
     return normalized

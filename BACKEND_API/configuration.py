@@ -22,11 +22,10 @@ class settings :
     OPENAGENDA_API_KEY = os.getenv("OPENAGENDA_API_KEY")
     OPENAGENDA_BASE_URL = "https://api.openagenda.com/v2"
 
-    # DataTourisme – local flux via diffuseur.datatourisme.fr
-    # The URL below uses your account token to download your configured flux.
-    # Log in to https://diffuseur.datatourisme.fr to verify/adjust the exact download URL.
+    # DataTourisme REST API (https://api.datatourisme.fr/v1)
+    # Auth via X-API-Key header.  Key obtained at https://info.datatourisme.fr/utiliser-les-donnees
     DATATOURISME_TOKEN = os.getenv("DATATOURISME_TOKEN")
-    DATATOURISME_FLUX_URL = "https://diffuseur.datatourisme.fr/api/flux/1899215d-a6c7-4360-9792-df62177e5b3c"
+    DATATOURISME_BASE_URL = "https://api.datatourisme.fr/v1"
 
     # data.culture.gouv.fr – Agenda Culturel dataset via Opendatasoft
     DATAGOUV_CULTURE_URL = "https://data.culture.gouv.fr/api/records/1.0/search"

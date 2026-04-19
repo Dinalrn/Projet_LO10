@@ -1,89 +1,48 @@
 # services/datatourisme_service.py
-# DataTourisme – local flux (batch feed) via diffuseur.datatourisme.fr.
+# DataTourisme REST API v1 – https://api.datatourisme.fr/v1
 #
-# HOW IT WORKS:
-#   DataTourisme is NOT a real-time search API. It delivers a pre-configured feed
-#   (your "flux") that you download in full. We fetch it once, cache it in memory,
-#   then filter by city on every request.
-#
-# IF THE URL DOESN'T WORK:
-#   Log in to https://diffuseur.datatourisme.fr, open your flux configuration and
-#   copy the exact download URL. Update DATATOURISME_FLUX_URL in configuration.py.
-#
-# FOR PRODUCTION:
-#   Replace the in-memory cache with a scheduled background job that refreshes the
-#   flux periodically (daily is usually enough) and stores it in the DB or Redis.
+# Uses the /entertainmentAndEvent pre-filtered endpoint (Fêtes et Manifestations).
+# Auth: X-API-Key header.
+# Rate limits: ~10 req/s sustained, 1000 req/hour.
 
 import requests
 from configuration import settings
 
-# Simple module-level in-memory cache (reset on server restart)
-_flux_cache: list | None = None
-
-
-def _load_flux() -> list:
-    """Download and return the raw DataTourisme flux as a list of JSON-LD objects."""
-    global _flux_cache
-    if _flux_cache is not None:
-        return _flux_cache
-
-    print("[DataTourisme] Downloading flux – this may take a moment...")
-    try:
-        response = requests.get(settings.DATATOURISME_FLUX_URL, timeout=30)
-        response.raise_for_status()
-        data = response.json()
-
-        # The flux can be a top-level list or a JSON-LD graph {"@graph": [...]}
-        if isinstance(data, list):
-            _flux_cache = data
-        elif isinstance(data, dict):
-            _flux_cache = data.get("@graph", data.get("member", []))
-        else:
-            _flux_cache = []
-
-        print(f"[DataTourisme] Flux loaded – {len(_flux_cache)} objects cached.")
-    except Exception as e:
-        print(f"[DataTourisme] Failed to load flux: {e}")
-        _flux_cache = []
-
-    return _flux_cache
-
 
 def fetch_datatourisme_events(city: str) -> list:
     """
-    Return DataTourisme Event objects whose address locality matches `city`.
-    Filtering is done in memory after downloading the full flux.
+    Return up to 100 entertainment/event POIs whose city label matches `city`.
     """
-    all_objects = _load_flux()
-    city_lower = city.lower()
-    matching = []
+    if not settings.DATATOURISME_TOKEN:
+        print("[DataTourisme] Token not set (DATATOURISME_TOKEN env var missing), skipping.")
+        return []
 
-    for obj in all_objects:
-        # Keep only Event-typed objects
-        obj_types = obj.get("@type", [])
-        if isinstance(obj_types, str):
-            obj_types = [obj_types]
-        if not any("event" in t.lower() for t in obj_types):
-            continue
+    url = f"{settings.DATATOURISME_BASE_URL}/entertainmentAndEvent"
 
-        # Check city in location address
-        locations = obj.get("isLocatedAt", [])
-        if isinstance(locations, dict):
-            locations = [locations]
+    headers = {
+        "X-API-Key": settings.DATATOURISME_TOKEN,
+    }
 
-        for loc in locations:
-            addresses = loc.get("schema:address", loc.get("hasAddress", []))
-            if isinstance(addresses, dict):
-                addresses = [addresses]
-            for addr in addresses:
-                locality = addr.get("schema:addressLocality", addr.get("addressLocality", ""))
-                if isinstance(locality, list):
-                    locality = locality[0] if locality else ""
-                if city_lower in str(locality).lower():
-                    matching.append(obj)
-                    break
-            else:
-                continue
-            break
+    # Request exactly the fields we need (specifying fields replaces the default set)
+    params = {
+        "filters": f'isLocatedAt.address.hasAddressCity.label[text]="{city}"',
+        "fields": (
+            "uuid,label,type,"
+            "takesPlaceAt,"
+            "isLocatedAt,"
+            "hasDescription,"
+            "hasMainRepresentation,"
+            "offers"
+        ),
+        "lang": "fr",
+        "page_size": 100,
+    }
 
-    return matching
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=15)
+        response.raise_for_status()
+        data = response.json()
+        return data.get("objects", [])
+    except Exception as e:
+        print(f"[DataTourisme] Fetch error for city '{city}': {e}")
+        return []
