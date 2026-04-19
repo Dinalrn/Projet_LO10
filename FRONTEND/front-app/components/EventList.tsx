@@ -7,9 +7,10 @@ interface Props {
   onToggleSave?: (event: Event) => Promise<void>;
   registeredIds?: Set<string>;
   onRegister?: (event: Event) => void;
+  onShare?: (event: Event) => void;
 }
 
-export default function EventList({ events, savedIds, onToggleSave, registeredIds, onRegister }: Props) {
+export default function EventList({ events, savedIds, onToggleSave, registeredIds, onRegister, onShare }: Props) {
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {events.map((event) => (
@@ -20,6 +21,7 @@ export default function EventList({ events, savedIds, onToggleSave, registeredId
           onToggleSave={onToggleSave}
           isRegistered={registeredIds?.has(event.id)}
           onRegister={onRegister}
+          onShare={onShare}
         />
       ))}
     </div>

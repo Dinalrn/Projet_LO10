@@ -64,7 +64,25 @@ CREATE TABLE IF NOT EXISTS event_registrations (
 
 CREATE INDEX IF NOT EXISTS idx_event_registrations_user ON event_registrations(user_id);
 
--- ── 4. Friendships ───────────────────────────────────────────
+-- ── 4. Shared events ─────────────────────────────────────────
+-- A user can share any event (from any source) with a friend.
+-- read_at is NULL until the recipient opens their inbox.
+CREATE TABLE IF NOT EXISTS shared_events (
+    id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    sender_id         UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    recipient_id      UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    external_event_id TEXT        NOT NULL,
+    source            TEXT        NOT NULL,
+    event_data        JSONB       NOT NULL,
+    message           TEXT,
+    sent_at           TIMESTAMPTZ DEFAULT NOW(),
+    read_at           TIMESTAMPTZ             -- NULL = unread
+);
+
+CREATE INDEX IF NOT EXISTS idx_shared_events_recipient ON shared_events(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_shared_events_sender    ON shared_events(sender_id);
+
+-- ── 5. Friendships ───────────────────────────────────────────
 -- Directed friendship request: requester → addressee.
 -- status: 'pending' | 'accepted' | 'blocked'
 -- Accepted friendship means both directions are considered friends.

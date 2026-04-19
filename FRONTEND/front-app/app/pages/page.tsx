@@ -6,8 +6,12 @@ import SearchBar from "@/components/SearchBar";
 import EventList from "@/components/EventList";
 import UserMenu from "@/components/UserMenu";
 import RegisterModal from "@/components/RegisterModal";
+import ShareEventModal from "@/components/ShareEventModal";
+import LocateButton from "@/components/LocateButton";
 import { fetchEvents } from "@/lib/api";
 import { Event, Registration, SourceStat } from "@/types/event";
+
+interface FriendOption { friend_id: string; friend_username: string; }
 
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -22,6 +26,8 @@ export default function EventsPage() {
   const [registeredIds, setRegisteredIds] = useState<Set<string>>(new Set());
   const [registeringEvent, setRegisteringEvent] = useState<Event | null>(null);
   const [pendingFriends, setPendingFriends] = useState(0);
+  const [friendsList, setFriendsList] = useState<FriendOption[]>([]);
+  const [sharingEvent, setSharingEvent] = useState<Event | null>(null);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -49,7 +55,10 @@ export default function EventsPage() {
 
     fetch("/api/friends")
       .then((r) => r.json())
-      .then((d) => setPendingFriends(d.pending_received?.length ?? 0))
+      .then((d) => {
+        setPendingFriends((d.pending_received?.length ?? 0) + (d.unread_shared ?? 0));
+        setFriendsList(d.friends ?? []);
+      })
       .catch(() => null);
   }, []);
 
@@ -67,6 +76,16 @@ export default function EventsPage() {
       setSavedIds((prev) => new Set(prev).add(event.id));
     }
   }, [savedIds]);
+
+  const handleConfirmShare = useCallback(async (recipientId: string, message: string) => {
+    if (!sharingEvent) return;
+    await fetch("/api/shared-events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: sharingEvent, recipient_id: recipientId, message }),
+    });
+    setSharingEvent(null);
+  }, [sharingEvent]);
 
   const handleConfirmRegister = useCallback(async (visitDate: string, visitTime: string) => {
     if (!registeringEvent) return;
@@ -105,6 +124,14 @@ export default function EventsPage() {
           event={registeringEvent}
           onConfirm={handleConfirmRegister}
           onClose={() => setRegisteringEvent(null)}
+        />
+      )}
+      {sharingEvent && (
+        <ShareEventModal
+          event={sharingEvent}
+          friends={friendsList}
+          onConfirm={handleConfirmShare}
+          onClose={() => setSharingEvent(null)}
         />
       )}
 
@@ -154,6 +181,9 @@ export default function EventsPage() {
 
         {/* ── Search ── */}
         <SearchBar onSearch={handleSearch} loading={loading} />
+        <div className="mt-3 flex justify-center">
+          <LocateButton onLocate={handleSearch} />
+        </div>
 
         {/* ── Source stats ── */}
         {sources && !loading && (
@@ -213,6 +243,7 @@ export default function EventsPage() {
               onToggleSave={handleToggleSave}
               registeredIds={registeredIds}
               onRegister={setRegisteringEvent}
+              onShare={setSharingEvent}
             />
           </section>
         )}

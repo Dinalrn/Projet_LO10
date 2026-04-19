@@ -69,6 +69,13 @@ export async function GET() {
     [uid]
   );
 
+  // Unread shared events count (for badge)
+  const { rows: unreadRows } = await pool.query(
+    `SELECT COUNT(*)::int AS count FROM shared_events
+     WHERE recipient_id = $1 AND read_at IS NULL`,
+    [uid]
+  );
+
   return NextResponse.json({
     friends: friendRows.map((r) => ({
       friendship_id: r.friendship_id,
@@ -79,6 +86,7 @@ export async function GET() {
     })),
     pending_received: receivedRows,
     pending_sent: sentRows,
+    unread_shared: unreadRows[0]?.count ?? 0,
   });
 }
 

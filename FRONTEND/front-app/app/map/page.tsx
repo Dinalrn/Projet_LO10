@@ -9,6 +9,7 @@ import { fetchEvents } from "@/lib/api";
 import { Event, Registration, FriendEventLayer, SourceStat } from "@/types/event";
 import { MapLegend } from "@/components/MapLegend";
 import { OVERLAY_COLORS } from "@/components/MapView";
+import LocateButton from "@/components/LocateButton";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
@@ -154,8 +155,9 @@ export default function MapPage() {
             </nav>
           </div>
 
-          <div className="flex-1 sm:max-w-md">
+          <div className="flex items-center gap-2 flex-1 sm:max-w-md">
             <SearchBar onSearch={handleSearch} loading={loading} />
+            <LocateButton onLocate={handleSearch} compact />
           </div>
 
           {username && <div className="shrink-0"><UserMenu username={username} /></div>}

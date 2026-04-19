@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import UserMenu from "@/components/UserMenu";
-import { Registration } from "@/types/event";
+import { Registration, Event } from "@/types/event";
 
 /* ── Types ────────────────────────────────────────────────── */
 interface FriendEntry {
@@ -32,6 +32,21 @@ interface FriendsData {
   pending_sent: PendingSent[];
 }
 
+interface SharedItem {
+  id: string;
+  sender_username?: string;
+  recipient_username?: string;
+  event_data: Event;
+  message: string | null;
+  sent_at: string;
+  unread: boolean;
+}
+
+interface SharedEvents {
+  received: SharedItem[];
+  sent: SharedItem[];
+}
+
 /* ── Helpers ──────────────────────────────────────────────── */
 function formatVisitDate(date: string, time: string | null): string {
   try {
@@ -56,6 +71,8 @@ export default function FriendsPage() {
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState<string | null>(null);
 
+  const [shared, setShared] = useState<SharedEvents>({ received: [], sent: [] });
+
   // Add-friend form state
   const [searchInput, setSearchInput] = useState("");
   const [requestStatus, setRequestStatus] = useState<{ type: "ok" | "err"; msg: string } | null>(null);
@@ -66,14 +83,27 @@ export default function FriendsPage() {
     if (res.ok) setData(await res.json());
   }, []);
 
+  const loadShared = useCallback(async () => {
+    const res = await fetch("/api/shared-events");
+    if (!res.ok) return;
+    const d: SharedEvents = await res.json();
+    setShared(d);
+    // Mark all unread as read silently in background
+    d.received.filter((item) => item.unread).forEach((item) => {
+      fetch(`/api/shared-events/${item.id}`, { method: "PATCH" }).catch(() => null);
+    });
+    // Update local state to reflect read status
+    setShared({ ...d, received: d.received.map((i) => ({ ...i, unread: false })) });
+  }, []);
+
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => setUsername(d.username ?? null))
       .catch(() => null);
 
-    loadData().finally(() => setLoading(false));
-  }, [loadData]);
+    Promise.all([loadData(), loadShared()]).finally(() => setLoading(false));
+  }, [loadData, loadShared]);
 
   /* ── Send friend request ── */
   const handleSendRequest = async (e: React.FormEvent) => {
@@ -95,6 +125,15 @@ export default function FriendsPage() {
       setRequestStatus({ type: "err", msg: json.error ?? "Something went wrong" });
     }
     setSending(false);
+  };
+
+  /* ── Delete a shared event item ── */
+  const handleDeleteShared = async (id: string) => {
+    await fetch(`/api/shared-events/${id}`, { method: "DELETE" });
+    setShared((prev) => ({
+      received: prev.received.filter((i) => i.id !== id),
+      sent: prev.sent.filter((i) => i.id !== id),
+    }));
   };
 
   /* ── Accept / decline request ── */
@@ -338,6 +377,123 @@ export default function FriendsPage() {
                 ))}
               </div>
             </section>
+
+            {/* ── Shared events inbox ── */}
+            {shared.received.length > 0 && (
+              <section className="mt-8">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-400">
+                  Events sent to you · {shared.received.length}
+                </h2>
+                <div className="space-y-3">
+                  {shared.received.map((item) => {
+                    const ev = item.event_data;
+                    return (
+                      <div
+                        key={item.id}
+                        className={`flex gap-3 rounded-2xl border p-4
+                          ${item.unread
+                            ? "border-violet-300 bg-violet-50 dark:border-violet-800 dark:bg-violet-950/30"
+                            : "border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900"
+                          }`}
+                      >
+                        {/* Thumbnail */}
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+                          {ev.image
+                            ? <img src={ev.image} alt={ev.title} className="h-full w-full object-cover"
+                                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                            : <div className="flex h-full items-center justify-center text-xl text-gray-300">🎭</div>
+                          }
+                        </div>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-xs font-medium text-violet-500">✈ from {item.sender_username}</span>
+                            <span className="text-[10px] text-gray-400">
+                              {new Date(item.sent_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                            </span>
+                          </div>
+                          <p className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1">{ev.title}</p>
+                          {(ev.location.city || ev.location.name) && (
+                            <p className="text-xs text-gray-400 truncate">
+                              📍 {[ev.location.name, ev.location.city].filter(Boolean).join(", ")}
+                            </p>
+                          )}
+                          {item.message && (
+                            <p className="mt-1 text-xs italic text-gray-500 dark:text-gray-400 line-clamp-2">
+                              &ldquo;{item.message}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteShared(item.id)}
+                          className="shrink-0 self-start rounded-lg border border-gray-200 px-2 py-1 text-xs
+                                     text-gray-400 hover:border-red-400 hover:text-red-500 transition
+                                     dark:border-gray-700"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* ── Shared events sent ── */}
+            {shared.sent.length > 0 && (
+              <section className="mt-8">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-400">
+                  Events you sent · {shared.sent.length}
+                </h2>
+                <div className="space-y-3">
+                  {shared.sent.map((item) => {
+                    const ev = item.event_data;
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex gap-3 rounded-2xl border border-gray-100 bg-white p-4
+                                   dark:border-gray-800 dark:bg-gray-900"
+                      >
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+                          {ev.image
+                            ? <img src={ev.image} alt={ev.title} className="h-full w-full object-cover"
+                                   onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                            : <div className="flex h-full items-center justify-center text-xl text-gray-300">🎭</div>
+                          }
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="text-xs font-medium text-gray-500">✈ to {item.recipient_username}</span>
+                            <span className="text-[10px] text-gray-400">
+                              {new Date(item.sent_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+                            </span>
+                          </div>
+                          <p className="font-semibold text-sm text-gray-900 dark:text-white line-clamp-1">{ev.title}</p>
+                          {(ev.location.city || ev.location.name) && (
+                            <p className="text-xs text-gray-400 truncate">
+                              📍 {[ev.location.name, ev.location.city].filter(Boolean).join(", ")}
+                            </p>
+                          )}
+                          {item.message && (
+                            <p className="mt-1 text-xs italic text-gray-500 dark:text-gray-400 line-clamp-2">
+                              &ldquo;{item.message}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteShared(item.id)}
+                          className="shrink-0 self-start rounded-lg border border-gray-200 px-2 py-1 text-xs
+                                     text-gray-400 hover:border-red-400 hover:text-red-500 transition
+                                     dark:border-gray-700"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
           </>
         )}
 
