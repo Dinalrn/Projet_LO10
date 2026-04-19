@@ -9,46 +9,69 @@ import {
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { Event } from "@/types/event";
+import { Event, Registration, FriendEventLayer } from "@/types/event";
 
-/* ── Source colours ──────────────────────────────────────── */
+/* ── Source colours (search results) ────────────────────── */
 const SOURCE_COLORS: Record<string, string> = {
-  ticketmaster: "#3b82f6",   // blue-500
-  datatourisme: "#10b981",   // emerald-500
-  openagenda:   "#f97316",   // orange-500
-  "data.culture.gouv.fr": "#ec4899", // pink-500
+  ticketmaster:          "#3b82f6",
+  datatourisme:          "#10b981",
+  openagenda:            "#f97316",
+  "data.culture.gouv.fr": "#ec4899",
 };
 
+export const OVERLAY_COLORS = {
+  saved:       "#f59e0b", // amber-400
+  registered:  "#7c3aed", // violet-600
+  friends:     "#0d9488", // teal-600
+} as const;
+
 function pinColor(source: string): string {
-  return SOURCE_COLORS[source] ?? "#6b7280"; // gray-500
+  return SOURCE_COLORS[source] ?? "#6b7280";
 }
 
-/* ── Auto-fit bounds when events change ──────────────────── */
+function hasCoords(e: Event): boolean {
+  const lat = parseFloat(e.location.lat);
+  const lon = parseFloat(e.location.lon);
+  return !isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0;
+}
+
+function coords(e: Event): [number, number] {
+  return [parseFloat(e.location.lat), parseFloat(e.location.lon)];
+}
+
+/* ── Shared popup body ───────────────────────────────────── */
+function EventPopupBody({ event }: { event: Event }) {
+  return (
+    <>
+      <p className="font-semibold leading-snug">{event.title || "Untitled"}</p>
+      {event.description && (
+        <p className="mt-1 text-xs text-gray-500 line-clamp-2">{event.description}</p>
+      )}
+      <div className="mt-2 space-y-0.5 text-xs text-gray-600">
+        {event.date && (
+          <p>📅 {event.date}{event.time ? ` · ${event.time.slice(0, 5)}` : ""}</p>
+        )}
+        {(event.location.name || event.location.city) && (
+          <p>📍 {[event.location.name, event.location.city].filter(Boolean).join(", ")}</p>
+        )}
+        <p>🎟️ {event.price > 0 ? `${event.price} €` : "Free"}</p>
+      </div>
+    </>
+  );
+}
+
+/* ── Auto-fit bounds when search events change ───────────── */
 function BoundsFitter({ events }: { events: Event[] }) {
   const map = useMap();
 
   useEffect(() => {
-    const pts = events
-      .map((e) => ({
-        lat: parseFloat(e.location.lat),
-        lon: parseFloat(e.location.lon),
-      }))
-      .filter((p) => !isNaN(p.lat) && !isNaN(p.lon));
-
+    const pts = events.filter(hasCoords).map(coords);
     if (pts.length === 0) return;
-
-    if (pts.length === 1) {
-      map.setView([pts[0].lat, pts[0].lon], 13);
-      return;
-    }
-
-    const lats = pts.map((p) => p.lat);
-    const lons = pts.map((p) => p.lon);
+    if (pts.length === 1) { map.setView(pts[0], 13); return; }
+    const lats = pts.map((p) => p[0]);
+    const lons = pts.map((p) => p[1]);
     map.fitBounds(
-      [
-        [Math.min(...lats), Math.min(...lons)],
-        [Math.max(...lats), Math.max(...lons)],
-      ],
+      [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]],
       { padding: [40, 40] }
     );
   }, [events, map]);
@@ -56,24 +79,26 @@ function BoundsFitter({ events }: { events: Event[] }) {
   return null;
 }
 
-
-/* ── Main map component ──────────────────────────────────── */
+/* ── Props ───────────────────────────────────────────────── */
 interface Props {
   events: Event[];
+  savedEvents?: Event[];
+  myRegistrations?: Registration[];
+  friendsEvents?: FriendEventLayer[];
   initialCenter?: [number, number];
   initialZoom?: number;
 }
 
+/* ── Main component ──────────────────────────────────────── */
 export default function MapView({
   events,
-  initialCenter = [46.6, 2.3], // centre of France
+  savedEvents = [],
+  myRegistrations = [],
+  friendsEvents = [],
+  initialCenter = [46.6, 2.3],
   initialZoom = 6,
 }: Props) {
-  const eventsWithCoords = events.filter((e) => {
-    const lat = parseFloat(e.location.lat);
-    const lon = parseFloat(e.location.lon);
-    return !isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0;
-  });
+  const searchWithCoords = events.filter(hasCoords);
 
   return (
     <MapContainer
@@ -87,41 +112,19 @@ export default function MapView({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {eventsWithCoords.map((event) => {
-        const lat = parseFloat(event.location.lat);
-        const lon = parseFloat(event.location.lon);
+      {/* ── Search result markers ── */}
+      {searchWithCoords.map((event) => {
         const color = pinColor(event.source);
-
         return (
           <CircleMarker
-            key={event.id}
-            center={[lat, lon]}
+            key={`search-${event.id}`}
+            center={coords(event)}
             radius={8}
-            pathOptions={{
-              color,
-              fillColor: color,
-              fillOpacity: 0.8,
-              weight: 1.5,
-            }}
+            pathOptions={{ color, fillColor: color, fillOpacity: 0.8, weight: 1.5 }}
           >
             <Popup maxWidth={260}>
               <div className="text-sm">
-                <p className="font-semibold leading-snug">{event.title || "Untitled"}</p>
-
-                {event.description && (
-                  <p className="mt-1 text-xs text-gray-500 line-clamp-3">{event.description}</p>
-                )}
-
-                <div className="mt-2 space-y-0.5 text-xs text-gray-600">
-                  {event.date && (
-                    <p>📅 {event.date}{event.time ? ` · ${event.time.slice(0, 5)}` : ""}</p>
-                  )}
-                  {(event.location.name || event.location.city) && (
-                    <p>📍 {[event.location.name, event.location.city].filter(Boolean).join(", ")}</p>
-                  )}
-                  <p>🎟️ {event.price > 0 ? `${event.price} €` : "Free"}</p>
-                </div>
-
+                <EventPopupBody event={event} />
                 <span
                   className="mt-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium text-white"
                   style={{ backgroundColor: color }}
@@ -134,7 +137,82 @@ export default function MapView({
         );
       })}
 
-      {events.length > 0 && <BoundsFitter events={eventsWithCoords} />}
+      {/* ── Saved events layer ── */}
+      {savedEvents.filter(hasCoords).map((event) => (
+        <CircleMarker
+          key={`saved-${event.id}`}
+          center={coords(event)}
+          radius={10}
+          pathOptions={{
+            color: OVERLAY_COLORS.saved,
+            fillColor: OVERLAY_COLORS.saved,
+            fillOpacity: 0.85,
+            weight: 2,
+          }}
+        >
+          <Popup maxWidth={260}>
+            <div className="text-sm">
+              <span className="mb-1 inline-block rounded-full bg-amber-100 px-2 py-0.5
+                               text-[10px] font-semibold text-amber-700">
+                📌 Saved
+              </span>
+              <EventPopupBody event={event} />
+            </div>
+          </Popup>
+        </CircleMarker>
+      ))}
+
+      {/* ── My registrations layer ── */}
+      {myRegistrations.filter((r) => hasCoords(r.event_data)).map((reg) => (
+        <CircleMarker
+          key={`reg-${reg.event_data.id}`}
+          center={coords(reg.event_data)}
+          radius={10}
+          pathOptions={{
+            color: OVERLAY_COLORS.registered,
+            fillColor: OVERLAY_COLORS.registered,
+            fillOpacity: 0.85,
+            weight: 2,
+          }}
+        >
+          <Popup maxWidth={260}>
+            <div className="text-sm">
+              <span className="mb-1 inline-block rounded-full bg-violet-100 px-2 py-0.5
+                               text-[10px] font-semibold text-violet-700">
+                📅 Going · {reg.visit_date}{reg.visit_time ? ` · ${reg.visit_time}` : ""}
+              </span>
+              <EventPopupBody event={reg.event_data} />
+            </div>
+          </Popup>
+        </CircleMarker>
+      ))}
+
+      {/* ── Friends' events layer ── */}
+      {friendsEvents.filter((f) => hasCoords(f.event)).map((f, i) => (
+        <CircleMarker
+          key={`friend-${f.friend_username}-${f.event.id}-${i}`}
+          center={coords(f.event)}
+          radius={10}
+          pathOptions={{
+            color: OVERLAY_COLORS.friends,
+            fillColor: OVERLAY_COLORS.friends,
+            fillOpacity: 0.85,
+            weight: 2,
+          }}
+        >
+          <Popup maxWidth={260}>
+            <div className="text-sm">
+              <span className="mb-1 inline-block rounded-full bg-teal-100 px-2 py-0.5
+                               text-[10px] font-semibold text-teal-700">
+                👥 {f.friend_username} · {f.visit_date}{f.visit_time ? ` · ${f.visit_time}` : ""}
+              </span>
+              <EventPopupBody event={f.event} />
+            </div>
+          </Popup>
+        </CircleMarker>
+      ))}
+
+      {events.length > 0 && <BoundsFitter events={searchWithCoords} />}
     </MapContainer>
   );
 }

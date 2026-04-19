@@ -25,8 +25,15 @@ export interface SourceStat {
 
 export interface Registration {
   event_data: Event;
-  visit_date: string;   // "YYYY-MM-DD"
+  visit_date: string;       // "YYYY-MM-DD"
   visit_time: string | null; // "HH:MM" or null
+}
+
+export interface FriendEventLayer {
+  event: Event;
+  friend_username: string;
+  visit_date: string;
+  visit_time: string | null;
 }
 
 export interface EventsResponse {
