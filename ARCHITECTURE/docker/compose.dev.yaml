@@ -27,6 +27,8 @@ services:
       dockerfile: dev.Dockerfile
     ports:
       - "3000:3000"
+    depends_on:
+      - postgres-service
     env_file:
       - ../../FRONTEND/.env
     networks:

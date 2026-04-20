@@ -1,7 +1,8 @@
 # main.py - Exemple API main script
 
-#Route event 
+#Route event
 from routes.events import router as events_router
+from routes.weather import router as weather_router
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -96,6 +97,7 @@ app.include_router(testid)
 app.include_router(auth_router)
 #ajout pr ev 
 app.include_router(events_router)
+app.include_router(weather_router)
 
 
 

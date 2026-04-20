@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Event } from "@/types/event";
+import type { DailyForecast } from "./WeatherWidget";
 
 interface Props {
   event: Event;
@@ -40,9 +41,30 @@ function formatDate(date: string, time: string): string {
   }
 }
 
+function iconUrl(icon: string) {
+  return `https://openweathermap.org/img/wn/${icon}@2x.png`;
+}
+
+function matchDayForecast(daily: DailyForecast[], eventDate: string): DailyForecast | null {
+  const target = new Date(eventDate + "T12:00:00").getTime() / 1000;
+  // Find the daily entry whose date (noon) is closest to the event date
+  let best: DailyForecast | null = null;
+  let bestDiff = Infinity;
+  for (const d of daily) {
+    const diff = Math.abs(d.date - target);
+    if (diff < bestDiff && diff < 60 * 60 * 36) { // within 36h
+      bestDiff = diff;
+      best = d;
+    }
+  }
+  return best;
+}
+
 export default function EventCard({ event, isSaved = false, onToggleSave, isRegistered = false, onRegister, onShare }: Props) {
   const { title, description, category, date, time, location, price, image, source } = event;
   const [saving, setSaving] = useState(false);
+  const [weatherDay, setWeatherDay] = useState<DailyForecast | null | "loading" | "error">(null);
+  const [weatherOpen, setWeatherOpen] = useState(false);
 
   const handleSave = async () => {
     if (!onToggleSave) return;
@@ -51,6 +73,29 @@ export default function EventCard({ event, isSaved = false, onToggleSave, isRegi
       await onToggleSave(event);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleWeather = async () => {
+    if (weatherOpen) {
+      setWeatherOpen(false);
+      return;
+    }
+    setWeatherOpen(true);
+    if (weatherDay !== null) return; // already fetched
+
+    setWeatherDay("loading");
+    try {
+      const qs = location.lat && location.lon
+        ? `lat=${location.lat}&lon=${location.lon}`
+        : `city=${encodeURIComponent(location.city || location.name || "")}`;
+      const res = await fetch(`/api/weather?${qs}`);
+      if (!res.ok) throw new Error("fetch failed");
+      const data = await res.json();
+      const match = matchDayForecast(data.daily ?? [], date);
+      setWeatherDay(match ?? "error");
+    } catch {
+      setWeatherDay("error");
     }
   };
 
@@ -84,7 +129,7 @@ export default function EventCard({ event, isSaved = false, onToggleSave, isRegi
           </span>
         )}
 
-        {/* Action buttons — bookmark + register */}
+        {/* Action buttons */}
         <div className="absolute top-2 right-2 flex gap-1.5">
           {onToggleSave && (
             <button
@@ -181,6 +226,52 @@ export default function EventCard({ event, isSaved = false, onToggleSave, isRegi
             <span>{price > 0 ? `${price} €` : "Free"}</span>
           </div>
         </div>
+
+        {/* Weather button — only for events with a specific date         TODO : Implement this functionality either with an other api like Meteo France or limiting to limited time frame
+        {date && (
+          <button
+            onClick={handleWeather}
+            className="mt-1 flex items-center gap-1.5 rounded-lg border border-sky-700/50 bg-sky-950/50
+                       px-2.5 py-1.5 text-xs font-medium text-sky-300 transition hover:bg-sky-900/60"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none"
+                 stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round"
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/>
+            </svg>
+            {weatherOpen ? "Hide weather outlet" : "How's the weather on this day ?"}
+          </button>
+        )} */}
+
+        {/* Inline weather panel */}
+        {weatherOpen && (
+          <div className="mt-1 rounded-xl border border-gray-700 bg-gray-800 p-3 text-xs">
+            {weatherDay === "loading" && (
+              <p className="text-gray-400 text-center">Loading…</p>
+            )}
+            {weatherDay === "error" && (
+              <p className="text-red-400 text-center">Weather is not avaible for this day</p>
+            )}
+            {weatherDay === null && null}
+            {weatherDay && weatherDay !== "loading" && weatherDay !== "error" && (
+              <div className="flex items-center gap-3">
+                <img src={iconUrl(weatherDay.icon)} alt={weatherDay.description} width={44} height={44} />
+                <div>
+                  <p className="capitalize text-white font-medium">{weatherDay.description}</p>
+                  <p className="text-gray-300">
+                    {Math.round(weatherDay.temp_max)}° / {Math.round(weatherDay.temp_min)}°C
+                  </p>
+                  {weatherDay.pop > 10 && (
+                    <p className="text-sky-400">💧 Rain: {weatherDay.pop}%</p>
+                  )}
+                  <p className="text-gray-400">
+                    Humidity {weatherDay.humidity}% · Wind {Math.round(weatherDay.wind_speed * 3.6)} km/h
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="pt-1">
           <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${sourceBadgeClass(source)}`}>

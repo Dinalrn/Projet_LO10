@@ -7,6 +7,13 @@
 #      each one for city events. This handles free-tier keys that can only access
 #      specific agendas.
 
+
+
+"""
+Not used for the moment
+"""
+
+
 import requests
 from configuration import settings
 

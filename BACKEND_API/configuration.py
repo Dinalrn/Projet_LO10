@@ -31,6 +31,9 @@ class settings :
     DATAGOUV_CULTURE_URL = "https://data.culture.gouv.fr/api/records/1.0/search"
     DATAGOUV_CULTURE_DATASET = "agenda-culturel-odp"
 
+    # OpenWeatherMap – free tier (2.5)
+    OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+
 # env secret class
 class secrets :
     postgre_pswd = "postgres" # passé tout en os.getenv()
