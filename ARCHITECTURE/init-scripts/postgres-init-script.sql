@@ -105,3 +105,28 @@ CREATE TRIGGER friendships_set_updated_at
 -- Index to quickly find all friendships for a given user (either side)
 CREATE INDEX IF NOT EXISTS idx_friendships_requester ON friendships(requester_id);
 CREATE INDEX IF NOT EXISTS idx_friendships_addressee ON friendships(addressee_id);
+
+-- ── 6. User preferences ──────────────────────────────────────
+-- Explicit category interests set by the user in their preferences page.
+CREATE TABLE IF NOT EXISTS user_preferences (
+    id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    category   TEXT        NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, category)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_preferences_user ON user_preferences(user_id);
+
+-- ── 7. Search history ────────────────────────────────────────
+-- Server-side log of city searches per user, used as a location signal
+-- in the recommendation scoring. Keeps only the last 50 rows per user
+-- (enforced by the application layer on insert).
+CREATE TABLE IF NOT EXISTS user_search_history (
+    id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    city        TEXT        NOT NULL,
+    searched_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_search_history_user ON user_search_history(user_id, searched_at DESC);
