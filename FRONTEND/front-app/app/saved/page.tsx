@@ -4,11 +4,19 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import UserMenu from "@/components/UserMenu";
 import EventCard from "@/components/EventCard";
-import { Event } from "@/types/event";
+import RegisterModal from "@/components/RegisterModal";
+import ShareEventModal from "@/components/ShareEventModal";
+import { Event, Registration } from "@/types/event";
+
+interface FriendOption { friend_id: string; friend_username: string; }
 
 export default function SavedEventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [registeredIds, setRegisteredIds] = useState<Set<string>>(new Set());
+  const [registeringEvent, setRegisteringEvent] = useState<Event | null>(null);
+  const [sharingEvent, setSharingEvent] = useState<Event | null>(null);
+  const [friendsList, setFriendsList] = useState<FriendOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState<string | null>(null);
 
@@ -16,6 +24,20 @@ export default function SavedEventsPage() {
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => setUsername(d.username ?? null))
+      .catch(() => null);
+
+    fetch("/api/registrations")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.registrations)) {
+          setRegisteredIds(new Set(d.registrations.map((r: Registration) => r.event_data.id)));
+        }
+      })
+      .catch(() => null);
+
+    fetch("/api/friends")
+      .then((r) => r.json())
+      .then((d) => setFriendsList(d.friends ?? []))
       .catch(() => null);
 
     fetch("/api/saved-events")
@@ -31,7 +53,6 @@ export default function SavedEventsPage() {
   }, []);
 
   const handleToggleSave = useCallback(async (event: Event) => {
-    // On this page, toggling always means unsaving
     await fetch(`/api/saved-events/${encodeURIComponent(event.id)}`, { method: "DELETE" });
     setEvents((prev) => prev.filter((e) => e.id !== event.id));
     setSavedIds((prev) => {
@@ -41,8 +62,49 @@ export default function SavedEventsPage() {
     });
   }, []);
 
+  const handleConfirmShare = useCallback(async (recipientId: string, message: string) => {
+    if (!sharingEvent) return;
+    await fetch("/api/shared-events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: sharingEvent, recipient_id: recipientId, message }),
+    });
+    setSharingEvent(null);
+  }, [sharingEvent]);
+
+  const handleConfirmRegister = useCallback(async (visitDate: string, visitTime: string) => {
+    if (!registeringEvent) return;
+    await fetch("/api/registrations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event: registeringEvent,
+        visit_date: visitDate,
+        visit_time: visitTime || null,
+      }),
+    });
+    setRegisteredIds((prev) => new Set(prev).add(registeringEvent.id));
+    setRegisteringEvent(null);
+  }, [registeringEvent]);
+
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      {registeringEvent && (
+        <RegisterModal
+          event={registeringEvent}
+          onConfirm={handleConfirmRegister}
+          onClose={() => setRegisteringEvent(null)}
+        />
+      )}
+      {sharingEvent && (
+        <ShareEventModal
+          event={sharingEvent}
+          friends={friendsList}
+          onConfirm={handleConfirmShare}
+          onClose={() => setSharingEvent(null)}
+        />
+      )}
+
       <div className="mx-auto max-w-7xl px-4 py-16">
 
         {/* ── Header ── */}
@@ -57,43 +119,33 @@ export default function SavedEventsPage() {
             Your saved events
           </p>
           <nav className="mt-4 flex justify-center gap-2 text-sm font-medium">
-            <Link
-              href="/pages"
+            <Link href="/pages"
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
                          hover:border-violet-400 hover:text-violet-600 transition
                          dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400"
-            >
+                         dark:hover:text-violet-400">
               List
             </Link>
-            <Link
-              href="/map"
+            <Link href="/map"
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
                          hover:border-violet-400 hover:text-violet-600 transition
                          dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400"
-            >
+                         dark:hover:text-violet-400">
               Map
             </Link>
-            <span className="rounded-lg bg-violet-600 px-4 py-1.5 text-white">
-              Saved
-            </span>
-            <Link
-              href="/registered"
+            <span className="rounded-lg bg-violet-600 px-4 py-1.5 text-white">Saved</span>
+            <Link href="/registered"
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
                          hover:border-violet-400 hover:text-violet-600 transition
                          dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400"
-            >
+                         dark:hover:text-violet-400">
               Going
             </Link>
-            <Link
-              href="/friends"
+            <Link href="/friends"
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
                          hover:border-violet-400 hover:text-violet-600 transition
                          dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400"
-            >
+                         dark:hover:text-violet-400">
               Friends
             </Link>
           </nav>
@@ -103,10 +155,7 @@ export default function SavedEventsPage() {
         {loading && (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-64 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800"
-              />
+              <div key={i} className="h-64 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800" />
             ))}
           </div>
         )}
@@ -119,11 +168,9 @@ export default function SavedEventsPage() {
             <p className="mt-1 text-sm">
               Browse events and click the bookmark icon to save them here.
             </p>
-            <Link
-              href="/pages"
+            <Link href="/pages"
               className="mt-6 inline-block rounded-lg bg-violet-600 px-5 py-2 text-sm
-                         font-medium text-white hover:bg-violet-700 transition"
-            >
+                         font-medium text-white hover:bg-violet-700 transition">
               Discover events
             </Link>
           </div>
@@ -142,6 +189,9 @@ export default function SavedEventsPage() {
                   event={event}
                   isSaved={savedIds.has(event.id)}
                   onToggleSave={handleToggleSave}
+                  isRegistered={registeredIds.has(event.id)}
+                  onRegister={setRegisteringEvent}
+                  onShare={setSharingEvent}
                 />
               ))}
             </div>

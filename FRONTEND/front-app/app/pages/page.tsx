@@ -10,6 +10,7 @@ import ShareEventModal from "@/components/ShareEventModal";
 import LocateButton from "@/components/LocateButton";
 import WeatherWidget, { type WeatherData } from "@/components/WeatherWidget";
 import { fetchEvents } from "@/lib/api";
+import { saveSearch, loadSearch } from "@/lib/search-store";
 import { Event, Registration, SourceStat } from "@/types/event";
 
 interface FriendOption { friend_id: string; friend_username: string; }
@@ -63,7 +64,14 @@ export default function EventsPage() {
         setFriendsList(d.friends ?? []);
       })
       .catch(() => null);
-  }, []);
+
+    // Restore last search from localStorage
+    const last = loadSearch();
+    if (last) {
+      setRadius(last.radius);
+      handleSearch(last.city, last.radius);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleToggleSave = useCallback(async (event: Event) => {
     const isSaved = savedIds.has(event.id);
@@ -101,7 +109,8 @@ export default function EventsPage() {
     setRegisteringEvent(null);
   }, [registeringEvent]);
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (query: string, radiusOverride?: number) => {
+    const activeRadius = radiusOverride ?? radius;
     setLoading(true);
     setError(null);
     setSearched(true);
@@ -110,9 +119,11 @@ export default function EventsPage() {
     setSources(null);
     setWeather(null);
 
+    saveSearch(query, activeRadius);
+
     try {
       const [evData, wxRes] = await Promise.allSettled([
-        fetchEvents(query, radius),
+        fetchEvents(query, activeRadius),
         fetch(`/api/weather?city=${encodeURIComponent(query)}`).then((r) => r.ok ? r.json() : null),
       ]);
       if (evData.status === "fulfilled") {
