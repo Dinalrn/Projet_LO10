@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Event } from "@/types/event";
 import type { DailyForecast } from "./WeatherWidget";
+import EventDetailModal from "./EventDetailModal";
 
 interface Props {
   event: Event;
@@ -65,6 +66,7 @@ export default function EventCard({ event, isSaved = false, onToggleSave, isRegi
   const [saving, setSaving] = useState(false);
   const [weatherDay, setWeatherDay] = useState<DailyForecast | null | "loading" | "error">(null);
   const [weatherOpen, setWeatherOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const handleSave = async () => {
     if (!onToggleSave) return;
@@ -100,9 +102,23 @@ export default function EventCard({ event, isSaved = false, onToggleSave, isRegi
   };
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-gray-100
-                        bg-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5
-                        dark:border-gray-800 dark:bg-gray-900">
+    <>
+    {detailOpen && (
+      <EventDetailModal
+        event={event}
+        isSaved={isSaved}
+        isRegistered={isRegistered}
+        onToggleSave={onToggleSave}
+        onRegister={onRegister}
+        onShare={onShare}
+        onClose={() => setDetailOpen(false)}
+      />
+    )}
+    <article
+      onClick={() => setDetailOpen(true)}
+      className="flex flex-col overflow-hidden rounded-2xl border border-gray-100
+                 bg-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5
+                 cursor-pointer dark:border-gray-800 dark:bg-gray-900">
       {/* Image */}
       <div className="relative h-40 w-full bg-gray-100 dark:bg-gray-800">
         {image ? (
@@ -130,7 +146,7 @@ export default function EventCard({ event, isSaved = false, onToggleSave, isRegi
         )}
 
         {/* Action buttons */}
-        <div className="absolute top-2 right-2 flex gap-1.5">
+        <div className="absolute top-2 right-2 flex gap-1.5" onClick={(e) => e.stopPropagation()}>
           {onToggleSave && (
             <button
               onClick={handleSave}
@@ -280,5 +296,6 @@ export default function EventCard({ event, isSaved = false, onToggleSave, isRegi
         </div>
       </div>
     </article>
+    </>
   );
 }
