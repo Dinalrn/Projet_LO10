@@ -288,10 +288,9 @@ If you need a **strong one-liner explanation**:
 
 ---
 
-What has been done for the moment, using a python Template, i created a coerent backend using jwt autentification and wich already receive's data via an external API named Ticket master so phase 1 would be nearly complete.
-
 
 # TODO :
-Add a redis cash service to keep in front memory events (not only in the backend api),
-weather implementation, recomandation algorithm, center map arround france
+Center map around france (?)
+Frontend style rework 
+Distinction between trial and registration
 
