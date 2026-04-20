@@ -6,6 +6,7 @@ import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import UserMenu from "@/components/UserMenu";
 import { fetchEvents } from "@/lib/api";
+import { saveSearch, loadSearch } from "@/lib/search-store";
 import { Event, Registration, FriendEventLayer, SourceStat } from "@/types/event";
 import { MapLegend } from "@/components/MapLegend";
 import { OVERLAY_COLORS } from "@/components/MapView";
@@ -29,6 +30,9 @@ export default function MapPage() {
   const [savedEvents, setSavedEvents] = useState<Event[]>([]);
   const [myRegistrations, setMyRegistrations] = useState<Registration[]>([]);
   const [friendsEvents, setFriendsEvents] = useState<FriendEventLayer[]>([]);
+
+  /* ── Radius ── */
+  const [radius, setRadius] = useState(30);
 
   /* ── Toggle state ── */
   const [showSaved, setShowSaved] = useState(false);
@@ -68,17 +72,28 @@ export default function MapPage() {
         setFriendsEvents(layers);
       })
       .catch(() => null);
-  }, []);
 
-  const handleSearch = async (query: string) => {
+    // Restore last search from localStorage
+    const last = loadSearch();
+    if (last) {
+      setRadius(last.radius);
+      handleSearch(last.city, last.radius);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSearch = async (query: string, radiusOverride?: number) => {
+    const activeRadius = radiusOverride ?? radius;
     setLoading(true);
     setError(null);
     setSearched(true);
     setCity(query);
     setEvents([]);
     setSources(null);
+
+    saveSearch(query, activeRadius);
+
     try {
-      const data = await fetchEvents(query);
+      const data = await fetchEvents(query, activeRadius);
       setEvents(data.events ?? []);
       setSources(data.sources ?? null);
     } catch (err) {
@@ -156,7 +171,7 @@ export default function MapPage() {
           </div>
 
           <div className="flex items-center gap-2 flex-1 sm:max-w-md">
-            <SearchBar onSearch={handleSearch} loading={loading} />
+            <SearchBar onSearch={handleSearch} loading={loading} radius={radius} onRadiusChange={setRadius} />
             <LocateButton onLocate={handleSearch} compact />
           </div>
 
