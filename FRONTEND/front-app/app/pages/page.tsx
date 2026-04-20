@@ -9,6 +9,7 @@ import RegisterModal from "@/components/RegisterModal";
 import ShareEventModal from "@/components/ShareEventModal";
 import LocateButton from "@/components/LocateButton";
 import WeatherWidget, { type WeatherData } from "@/components/WeatherWidget";
+import RecommendationsStrip from "@/components/RecommendationsStrip";
 import { fetchEvents } from "@/lib/api";
 import { saveSearch, loadSearch } from "@/lib/search-store";
 import { Event, Registration, SourceStat } from "@/types/event";
@@ -212,6 +213,11 @@ export default function EventsPage() {
                 </span>
               )}
             </Link>
+            <Link href="/preferences" className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
+                       hover:border-violet-400 hover:text-violet-600 transition
+                       dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500 dark:hover:text-violet-400">
+              ★ Preferences
+            </Link>
           </nav>
         </header>
 
@@ -264,6 +270,19 @@ export default function EventsPage() {
             <p className="mt-3 text-lg font-medium">No events found in &ldquo;{city}&rdquo;</p>
             <p className="mt-1 text-sm">Try a bigger city or a different spelling.</p>
           </div>
+        )}
+
+        {/* ── For You strip ── */}
+        {!loading && city && (
+          <RecommendationsStrip
+            city={city}
+            radiusKm={radius}
+            savedIds={savedIds}
+            registeredIds={registeredIds}
+            onToggleSave={handleToggleSave}
+            onRegister={setRegisteringEvent}
+            onShare={setSharingEvent}
+          />
         )}
 
         {/* ── Results ── */}

@@ -167,6 +167,10 @@ export default function MapPage() {
                 className="rounded-lg px-3 py-1.5 text-gray-400 hover:bg-gray-800 hover:text-white transition">
                 Friends
               </Link>
+              <Link href="/preferences"
+                className="rounded-lg px-3 py-1.5 text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                ★ Preferences
+              </Link>
             </nav>
           </div>
 

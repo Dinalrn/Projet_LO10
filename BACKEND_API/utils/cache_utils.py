@@ -20,14 +20,15 @@ def get_client() -> redis.Redis:
 
 # Maximum number of cached entries kept per namespace before oldest are evicted.
 NAMESPACE_LIMITS: dict[str, int] = {
-    "weather": 20,
-    "events": 20,
+    "weather":         20,
+    "events":          20,
+    "recommendations": 50,  # per-user entries, more variety needed
 }
 
-# Default TTL in seconds per namespace.
 NAMESPACE_TTL: dict[str, int] = {
-    "weather": 1800,   # 30 min — weather data is fresh enough
-    "events": 7200,    # 2 h   — event listings change slowly
+    "weather":         1800,  # 30 min
+    "events":          7200,  # 2 h
+    "recommendations":  900,  # 15 min — personalised, refreshes as behaviour changes
 }
 
 
