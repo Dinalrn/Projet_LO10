@@ -148,6 +148,17 @@ export default function EventsPage() {
         />
       )}
 
+      {/* ── Weather panel – fixed, aligned to main layout left edge ── */}
+      {weather && !loading && (
+        <div className="fixed top-4 z-40 w-full pointer-events-none">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="w-72 pointer-events-auto">
+              <WeatherWidget city={city} data={weather} />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto max-w-7xl px-4 py-16">
 
         {/* ── Header ── */}
@@ -198,86 +209,68 @@ export default function EventsPage() {
           <LocateButton onLocate={handleSearch} />
         </div>
 
-        {/* ── Two-column layout: events + weather sidebar ── */}
-        <div className="mt-8 flex gap-8 items-start">
-
-          {/* ── Left: main content ── */}
-          <div className="flex-1 min-w-0">
-
-            {/* Source stats */}
-            {sources && !loading && (
-              <div className="flex flex-wrap gap-2 mb-6">
-                {Object.entries(sources).map(([name, stat]) => (
-                  <span
-                    key={name}
-                    className={`rounded-full px-3 py-1 text-xs font-medium border
-                      ${stat.status === "ok"
-                        ? "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400"
-                        : "border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
-                      }`}
-                  >
-                    {name}: {stat.count} events
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Loading skeleton */}
-            {loading && (
-              <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-64 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800" />
-                ))}
-              </div>
-            )}
-
-            {/* Error */}
-            {error && !loading && (
-              <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-6 text-center
-                              text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
-                <p className="text-lg font-medium">Something went wrong</p>
-                <p className="mt-1 text-sm opacity-75">{error}</p>
-              </div>
-            )}
-
-            {/* Empty state */}
-            {!loading && !error && searched && events.length === 0 && (
-              <div className="mt-16 text-center text-gray-400 dark:text-gray-600">
-                <p className="text-4xl">🔍</p>
-                <p className="mt-3 text-lg font-medium">No events found in &ldquo;{city}&rdquo;</p>
-                <p className="mt-1 text-sm">Try a bigger city or a different spelling.</p>
-              </div>
-            )}
-
-            {/* Results */}
-            {!loading && events.length > 0 && (
-              <section>
-                <p className="mb-4 text-sm text-gray-400 dark:text-gray-500">
-                  {events.length} event{events.length > 1 ? "s" : ""} found in{" "}
-                  <span className="font-semibold text-gray-700 dark:text-gray-300">{city}</span>
-                </p>
-                <EventList
-                  events={events}
-                  savedIds={savedIds}
-                  onToggleSave={handleToggleSave}
-                  registeredIds={registeredIds}
-                  onRegister={setRegisteringEvent}
-                  onShare={setSharingEvent}
-                />
-              </section>
-            )}
+        {/* ── Source stats ── */}
+        {sources && !loading && (
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {Object.entries(sources).map(([name, stat]) => (
+              <span
+                key={name}
+                className={`rounded-full px-3 py-1 text-xs font-medium border
+                  ${stat.status === "ok"
+                    ? "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400"
+                    : "border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400"
+                  }`}
+              >
+                {name}: {stat.count} events
+              </span>
+            ))}
           </div>
+        )}
 
-          {/* ── Right: weather sidebar ── */}
-          {weather && !loading && (
-            <aside className="w-80 shrink-0">
-              <div className="sticky top-8">
-                <WeatherWidget city={city} data={weather} />
-              </div>
-            </aside>
-          )}
+        {/* ── Loading skeleton ── */}
+        {loading && (
+          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="h-64 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800" />
+            ))}
+          </div>
+        )}
 
-        </div>
+        {/* ── Error ── */}
+        {error && !loading && (
+          <div className="mt-12 rounded-2xl border border-red-200 bg-red-50 p-6 text-center
+                          text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+            <p className="text-lg font-medium">Something went wrong</p>
+            <p className="mt-1 text-sm opacity-75">{error}</p>
+          </div>
+        )}
+
+        {/* ── Empty state ── */}
+        {!loading && !error && searched && events.length === 0 && (
+          <div className="mt-16 text-center text-gray-400 dark:text-gray-600">
+            <p className="text-4xl">🔍</p>
+            <p className="mt-3 text-lg font-medium">No events found in &ldquo;{city}&rdquo;</p>
+            <p className="mt-1 text-sm">Try a bigger city or a different spelling.</p>
+          </div>
+        )}
+
+        {/* ── Results ── */}
+        {!loading && events.length > 0 && (
+          <section className="mt-10">
+            <p className="mb-4 text-sm text-gray-400 dark:text-gray-500">
+              {events.length} event{events.length > 1 ? "s" : ""} found in{" "}
+              <span className="font-semibold text-gray-700 dark:text-gray-300">{city}</span>
+            </p>
+            <EventList
+              events={events}
+              savedIds={savedIds}
+              onToggleSave={handleToggleSave}
+              registeredIds={registeredIds}
+              onRegister={setRegisteringEvent}
+              onShare={setSharingEvent}
+            />
+          </section>
+        )}
 
       </div>
     </main>
