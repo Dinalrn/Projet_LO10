@@ -1,4 +1,4 @@
-fastapi 
+fastapi
 uvicorn
 fastapi-cache2
 psycopg2-binary
@@ -7,3 +7,4 @@ python-jose
 passlib[bcrypt]
 jinja2
 requests
+redis
