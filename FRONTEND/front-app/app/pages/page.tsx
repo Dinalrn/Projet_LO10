@@ -30,6 +30,7 @@ export default function EventsPage() {
   const [friendsList, setFriendsList] = useState<FriendOption[]>([]);
   const [sharingEvent, setSharingEvent] = useState<Event | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [radius, setRadius] = useState(30);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -111,7 +112,7 @@ export default function EventsPage() {
 
     try {
       const [evData, wxRes] = await Promise.allSettled([
-        fetchEvents(query),
+        fetchEvents(query, radius),
         fetch(`/api/weather?city=${encodeURIComponent(query)}`).then((r) => r.ok ? r.json() : null),
       ]);
       if (evData.status === "fulfilled") {
@@ -204,7 +205,7 @@ export default function EventsPage() {
         </header>
 
         {/* ── Search ── */}
-        <SearchBar onSearch={handleSearch} loading={loading} />
+        <SearchBar onSearch={handleSearch} loading={loading} radius={radius} onRadiusChange={setRadius} />
         <div className="mt-3 flex justify-center">
           <LocateButton onLocate={handleSearch} />
         </div>
