@@ -148,6 +148,13 @@ export default function SavedEventsPage() {
                          dark:hover:text-violet-400">
               Friends
             </Link>
+            <Link href="/preferences"
+              className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
+                         hover:border-violet-400 hover:text-violet-600 transition
+                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
+                         dark:hover:text-violet-400">
+              ★ Preferences
+            </Link>
           </nav>
         </header>
 

@@ -22,7 +22,7 @@ const REASON_COLORS: Record<string, string> = {
   "Past interest": "bg-teal-600 text-white",
 };
 function reasonColor(r: string) {
-  if (r.includes("friend")) return "bg-pink-600 text-white";
+  if (r.includes("enjoy")) return "bg-pink-600 text-white";
   return REASON_COLORS[r] ?? "bg-gray-600 text-white";
 }
 

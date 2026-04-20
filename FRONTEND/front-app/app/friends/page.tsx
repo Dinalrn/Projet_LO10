@@ -173,6 +173,7 @@ export default function FriendsPage() {
             <Link href="/saved" className={navLink}>Saved</Link>
             <Link href="/registered" className={navLink}>Going</Link>
             <span className="rounded-lg bg-violet-600 px-4 py-1.5 text-white">Friends</span>
+            <Link href="/preferences" className={navLink}>★ Preferences</Link>
           </nav>
         </header>
 

@@ -57,7 +57,7 @@ def score_events(
         if friend_count > 0:
             score += min(friend_count * 15, 45)
             reasons.append(
-                "1 friend going" if friend_count == 1 else f"{friend_count} friends going"
+                "Friend enjoys this" if friend_count == 1 else f"{friend_count} friends enjoy this"
             )
 
         # ── Past-registration category (implicit taste) ───────
