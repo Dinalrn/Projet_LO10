@@ -292,7 +292,6 @@ What has been done for the moment, using a python Template, i created a coerent 
 
 
 # TODO :
-Add a redis cash service to keep in front memory events, (not only in the backend api)
-weather implementation
-recomandation algorithm
+Add a redis cash service to keep in front memory events (not only in the backend api),
+weather implementation, recomandation algorithm, center map arround france
 
