@@ -8,6 +8,7 @@ import UserMenu from "@/components/UserMenu";
 import RegisterModal from "@/components/RegisterModal";
 import ShareEventModal from "@/components/ShareEventModal";
 import LocateButton from "@/components/LocateButton";
+import WeatherWidget, { type WeatherData } from "@/components/WeatherWidget";
 import { fetchEvents } from "@/lib/api";
 import { Event, Registration, SourceStat } from "@/types/event";
 
@@ -28,6 +29,8 @@ export default function EventsPage() {
   const [pendingFriends, setPendingFriends] = useState(0);
   const [friendsList, setFriendsList] = useState<FriendOption[]>([]);
   const [sharingEvent, setSharingEvent] = useState<Event | null>(null);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [radius, setRadius] = useState(30);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -105,11 +108,22 @@ export default function EventsPage() {
     setCity(query);
     setEvents([]);
     setSources(null);
+    setWeather(null);
 
     try {
-      const data = await fetchEvents(query);
-      setEvents(data.events ?? []);
-      setSources(data.sources ?? null);
+      const [evData, wxRes] = await Promise.allSettled([
+        fetchEvents(query, radius),
+        fetch(`/api/weather?city=${encodeURIComponent(query)}`).then((r) => r.ok ? r.json() : null),
+      ]);
+      if (evData.status === "fulfilled") {
+        setEvents(evData.value.events ?? []);
+        setSources(evData.value.sources ?? null);
+      } else {
+        throw evData.reason;
+      }
+      if (wxRes.status === "fulfilled" && wxRes.value) {
+        setWeather(wxRes.value as WeatherData);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -133,6 +147,17 @@ export default function EventsPage() {
           onConfirm={handleConfirmShare}
           onClose={() => setSharingEvent(null)}
         />
+      )}
+
+      {/* ── Weather panel – fixed, aligned to main layout left edge ── */}
+      {weather && !loading && (
+        <div className="fixed top-4 z-40 w-full pointer-events-none">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="w-72 pointer-events-auto">
+              <WeatherWidget city={city} data={weather} />
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="mx-auto max-w-7xl px-4 py-16">
@@ -180,7 +205,7 @@ export default function EventsPage() {
         </header>
 
         {/* ── Search ── */}
-        <SearchBar onSearch={handleSearch} loading={loading} />
+        <SearchBar onSearch={handleSearch} loading={loading} radius={radius} onRadiusChange={setRadius} />
         <div className="mt-3 flex justify-center">
           <LocateButton onLocate={handleSearch} />
         </div>

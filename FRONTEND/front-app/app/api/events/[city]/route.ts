@@ -44,15 +44,18 @@ async function getToken(): Promise<string> {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ city: string }> }
 ) {
   try {
     const { city } = await params;
     const token = await getToken();
 
+    const { searchParams } = new URL(request.url);
+    const radiusKm = searchParams.get("radius_km") ?? "30";
+
     const res = await fetch(
-      `${BACKEND}/events/${encodeURIComponent(city)}`,
+      `${BACKEND}/events/${encodeURIComponent(city)}?radius_km=${radiusKm}`,
       {
         headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",

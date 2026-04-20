@@ -5,9 +5,11 @@ import { useState, KeyboardEvent } from "react";
 interface Props {
   onSearch: (city: string) => void;
   loading: boolean;
+  radius?: number;
+  onRadiusChange?: (value: number) => void;
 }
 
-export default function SearchBar({ onSearch, loading }: Props) {
+export default function SearchBar({ onSearch, loading, radius = 30, onRadiusChange }: Props) {
   const [value, setValue] = useState("");
 
   const submit = () => {
@@ -20,37 +22,58 @@ export default function SearchBar({ onSearch, loading }: Props) {
   };
 
   return (
-    <div className="flex w-full max-w-xl mx-auto gap-3">
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKey}
-        placeholder="Enter a city… e.g. Paris, Troyes"
-        disabled={loading}
-        className="flex-1 rounded-xl border border-gray-200 bg-white px-5 py-3 text-gray-900
-                   placeholder-gray-400 shadow-sm outline-none ring-0
-                   focus:border-violet-500 focus:ring-2 focus:ring-violet-200
-                   dark:border-gray-700 dark:bg-gray-900 dark:text-white
-                   dark:placeholder-gray-500 dark:focus:border-violet-400
-                   dark:focus:ring-violet-900 disabled:opacity-50 transition"
-      />
-      <button
-        onClick={submit}
-        disabled={loading || !value.trim()}
-        className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-3
-                   font-semibold text-white shadow-sm hover:bg-violet-700
-                   active:bg-violet-800 disabled:opacity-50 transition"
-      >
-        {loading ? (
-          <>
-            <Spinner />
-            Searching…
-          </>
-        ) : (
-          "Search"
-        )}
-      </button>
+    <div className="flex flex-col w-full max-w-xl mx-auto gap-3">
+      <div className="flex gap-3">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder="Enter a city… e.g. Paris, Troyes"
+          disabled={loading}
+          className="flex-1 rounded-xl border border-gray-200 bg-white px-5 py-3 text-gray-900
+                     placeholder-gray-400 shadow-sm outline-none ring-0
+                     focus:border-violet-500 focus:ring-2 focus:ring-violet-200
+                     dark:border-gray-700 dark:bg-gray-900 dark:text-white
+                     dark:placeholder-gray-500 dark:focus:border-violet-400
+                     dark:focus:ring-violet-900 disabled:opacity-50 transition"
+        />
+        <button
+          onClick={submit}
+          disabled={loading || !value.trim()}
+          className="flex items-center gap-2 rounded-xl bg-violet-600 px-6 py-3
+                     font-semibold text-white shadow-sm hover:bg-violet-700
+                     active:bg-violet-800 disabled:opacity-50 transition"
+        >
+          {loading ? (
+            <>
+              <Spinner />
+              Searching…
+            </>
+          ) : (
+            "Search"
+          )}
+        </button>
+      </div>
+
+      {/* Radius slider */}
+      <div className="flex items-center gap-3 px-1">
+        <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">5 km</span>
+        <input
+          type="range"
+          min={5}
+          max={50}
+          step={5}
+          value={radius}
+          onChange={(e) => onRadiusChange?.(Number(e.target.value))}
+          disabled={loading}
+          className="flex-1 accent-violet-600 disabled:opacity-50"
+        />
+        <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">50 km</span>
+        <span className="text-xs font-semibold text-violet-600 w-14 text-right shrink-0">
+          {radius} km
+        </span>
+      </div>
     </div>
   );
 }

@@ -17,6 +17,8 @@ services:
       - ../../BACKEND_API/.env
     environment:
       DEBUG: "True"
+    volumes:
+      - ../../BACKEND_API:/app
     networks:
       - template-network
 
@@ -27,8 +29,13 @@ services:
       dockerfile: dev.Dockerfile
     ports:
       - "3000:3000"
+    depends_on:
+      - postgres-service
     env_file:
       - ../../FRONTEND/.env
+    volumes:
+      - ../../FRONTEND/front-app:/app
+      - /app/node_modules
     networks:
       - template-network
 
