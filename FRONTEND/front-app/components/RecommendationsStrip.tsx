@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Event } from "@/types/event";
 import type { RecommendedEvent } from "@/app/api/recommendations/route";
+import EventDetailModal from "./EventDetailModal";
 
 interface Props {
   city: string;
@@ -91,68 +92,87 @@ function RecoCard({
   onRegister: (e: Event) => void;
   onShare: (e: Event) => void;
 }) {
+  const [detailOpen, setDetailOpen] = useState(false);
+
   return (
-    <article className="relative flex w-52 shrink-0 flex-col overflow-hidden rounded-2xl
-                        border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      {/* Image */}
-      <div className="relative h-28 w-full bg-gray-100 dark:bg-gray-800">
-        {event.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={event.image} alt={event.title} className="h-full w-full object-cover"
-               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-        ) : (
-          <div className="flex h-full items-center justify-center text-2xl text-gray-300 dark:text-gray-600">🎭</div>
-        )}
+    <>
+      {detailOpen && (
+        <EventDetailModal
+          event={event}
+          isSaved={isSaved}
+          isRegistered={isRegistered}
+          onToggleSave={onToggleSave}
+          onRegister={onRegister}
+          onShare={onShare}
+          onClose={() => setDetailOpen(false)}
+        />
+      )}
+      <article
+        onClick={() => setDetailOpen(true)}
+        className="relative flex w-52 shrink-0 flex-col overflow-hidden rounded-2xl cursor-pointer
+                   border border-gray-100 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5
+                   transition dark:border-gray-800 dark:bg-gray-900"
+      >
+        {/* Image */}
+        <div className="relative h-28 w-full bg-gray-100 dark:bg-gray-800">
+          {event.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={event.image} alt={event.title} className="h-full w-full object-cover"
+                 onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          ) : (
+            <div className="flex h-full items-center justify-center text-2xl text-gray-300 dark:text-gray-600">🎭</div>
+          )}
 
-        {/* Action buttons */}
-        <div className="absolute top-1.5 right-1.5 flex gap-1">
-          <button onClick={() => onToggleSave(event)}
-            className="rounded-full bg-black/60 p-1 backdrop-blur-sm hover:bg-black/80">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-3.5 w-3.5"
-                 fill={isSaved ? "white" : "none"} stroke="white" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-7-3.5L5 21V5z" />
-            </svg>
-          </button>
-          <button onClick={() => onRegister(event)}
-            className={`rounded-full p-1 backdrop-blur-sm hover:bg-black/80 ${isRegistered ? "bg-violet-600/90" : "bg-black/60"}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-3.5 w-3.5"
-                 fill="none" stroke="white" strokeWidth={2}>
-              <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" />
-              <line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" />
-              <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" />
-              <line x1="3" y1="10" x2="21" y2="10" strokeLinecap="round" />
-              {isRegistered && <path strokeLinecap="round" strokeLinejoin="round" d="M8 14l2.5 2.5L16 13" />}
-            </svg>
-          </button>
-          <button onClick={() => onShare(event)}
-            className="rounded-full bg-black/60 p-1 backdrop-blur-sm hover:bg-black/80">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-3.5 w-3.5"
-                 fill="none" stroke="white" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
-            </svg>
-          </button>
+          {/* Action buttons */}
+          <div className="absolute top-1.5 right-1.5 flex gap-1" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => onToggleSave(event)}
+              className="rounded-full bg-black/60 p-1 backdrop-blur-sm hover:bg-black/80">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-3.5 w-3.5"
+                   fill={isSaved ? "white" : "none"} stroke="white" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-7-3.5L5 21V5z" />
+              </svg>
+            </button>
+            <button onClick={() => onRegister(event)}
+              className={`rounded-full p-1 backdrop-blur-sm hover:bg-black/80 ${isRegistered ? "bg-violet-600/90" : "bg-black/60"}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-3.5 w-3.5"
+                   fill="none" stroke="white" strokeWidth={2}>
+                <rect x="3" y="4" width="18" height="18" rx="2" strokeLinecap="round" />
+                <line x1="16" y1="2" x2="16" y2="6" strokeLinecap="round" />
+                <line x1="8" y1="2" x2="8" y2="6" strokeLinecap="round" />
+                <line x1="3" y1="10" x2="21" y2="10" strokeLinecap="round" />
+                {isRegistered && <path strokeLinecap="round" strokeLinejoin="round" d="M8 14l2.5 2.5L16 13" />}
+              </svg>
+            </button>
+            <button onClick={() => onShare(event)}
+              className="rounded-full bg-black/60 p-1 backdrop-blur-sm hover:bg-black/80">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-3.5 w-3.5"
+                   fill="none" stroke="white" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Body */}
-      <div className="flex flex-1 flex-col gap-1 p-2.5">
-        <p className="line-clamp-2 text-xs font-semibold leading-snug text-gray-900 dark:text-white">
-          {event.title || "Untitled event"}
-        </p>
-        {event.date && (
-          <p className="text-[10px] text-gray-500 dark:text-gray-400">
-            📅 {new Date(event.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+        {/* Body */}
+        <div className="flex flex-1 flex-col gap-1 p-2.5">
+          <p className="line-clamp-2 text-xs font-semibold leading-snug text-gray-900 dark:text-white">
+            {event.title || "Untitled event"}
           </p>
-        )}
-        {/* Reason badges */}
-        <div className="mt-auto flex flex-wrap gap-1 pt-1">
-          {event.reasons.map((r) => (
-            <span key={r} className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${reasonColor(r)}`}>
-              {r}
-            </span>
-          ))}
+          {event.date && (
+            <p className="text-[10px] text-gray-500 dark:text-gray-400">
+              📅 {new Date(event.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
+            </p>
+          )}
+          {/* Reason badges */}
+          <div className="mt-auto flex flex-wrap gap-1 pt-1">
+            {event.reasons.map((r) => (
+              <span key={r} className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${reasonColor(r)}`}>
+                {r}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
-    </article>
+      </article>
+    </>
   );
 }
