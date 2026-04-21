@@ -290,7 +290,8 @@ If you need a **strong one-liner explanation**:
 
 
 # TODO :
-Center map around france (?)
-Frontend style rework 
-Distinction between trial and registration
-
+- Center map around france (?),
+- Improve recommendations with weather (?),
+- Multi-API aggregation (More api entry, more country),
+- Deduplication logic,
+- Pagination & performance,
