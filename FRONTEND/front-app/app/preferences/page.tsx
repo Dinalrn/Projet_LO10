@@ -61,7 +61,7 @@ export default function PreferencesPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-2xl px-4 py-16">
 
         {/* Header */}
@@ -69,10 +69,10 @@ export default function PreferencesPage() {
           <div className="flex justify-end mb-2">
             {username && <UserMenu username={username} />}
           </div>
-          <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+          <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-violet-50">
             Wanna<span className="text-violet-600">Go</span>
           </h1>
-          <p className="mt-3 text-lg text-gray-500 dark:text-gray-400">
+          <p className="mt-3 text-lg text-gray-500 dark:text-violet-300/70">
             Your preferences
           </p>
           <nav className="mt-4 flex justify-center gap-2 text-sm font-medium flex-wrap">
@@ -86,8 +86,8 @@ export default function PreferencesPage() {
               <Link key={href} href={href}
                 className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
                            hover:border-violet-400 hover:text-violet-600 transition
-                           dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                           dark:hover:text-violet-400">
+                           dark:border-violet-900/50 dark:text-violet-300/70 dark:hover:border-violet-500
+                           dark:hover:text-violet-300">
                 {label}
               </Link>
             ))}
@@ -98,12 +98,12 @@ export default function PreferencesPage() {
         {loading ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="h-12 animate-pulse rounded-xl bg-gray-200 dark:bg-gray-800" />
+              <div key={i} className="h-12 animate-pulse rounded-xl bg-gray-200 dark:bg-violet-900/20" />
             ))}
           </div>
         ) : (
           <>
-            <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mb-5 text-sm text-gray-500 dark:text-violet-300/70">
               Select the categories you enjoy — these feed your <span className="font-semibold text-violet-500">For You</span> recommendations.
             </p>
 
@@ -117,7 +117,7 @@ export default function PreferencesPage() {
                     className={`rounded-xl border px-4 py-3 text-sm font-medium text-left transition
                       ${active
                         ? "border-violet-600 bg-violet-600 text-white shadow-sm"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-violet-400 hover:text-violet-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-violet-500 dark:hover:text-violet-400"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-violet-400 hover:text-violet-600 dark:border-violet-900/50 dark:bg-[#1a1730] dark:text-violet-300/80 dark:hover:border-violet-500 dark:hover:text-violet-300"
                       }`}
                   >
                     {cat}

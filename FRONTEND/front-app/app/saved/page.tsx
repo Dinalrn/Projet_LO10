@@ -88,7 +88,7 @@ export default function SavedEventsPage() {
   }, [registeringEvent]);
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <main className="min-h-screen bg-background">
       {registeringEvent && (
         <RegisterModal
           event={registeringEvent}
@@ -112,47 +112,47 @@ export default function SavedEventsPage() {
           <div className="flex justify-end mb-2">
             {username && <UserMenu username={username} />}
           </div>
-          <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+          <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-violet-50">
             Wanna<span className="text-violet-600">Go</span>
           </h1>
-          <p className="mt-3 text-lg text-gray-500 dark:text-gray-400">
+          <p className="mt-3 text-lg text-gray-500 dark:text-violet-300/70">
             Your saved events
           </p>
           <nav className="mt-4 flex justify-center gap-2 text-sm font-medium">
             <Link href="/pages"
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
                          hover:border-violet-400 hover:text-violet-600 transition
-                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400">
+                         dark:border-violet-900/50 dark:text-violet-300/70 dark:hover:border-violet-500
+                         dark:hover:text-violet-300">
               List
             </Link>
             <Link href="/map"
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
                          hover:border-violet-400 hover:text-violet-600 transition
-                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400">
+                         dark:border-violet-900/50 dark:text-violet-300/70 dark:hover:border-violet-500
+                         dark:hover:text-violet-300">
               Map
             </Link>
             <span className="rounded-lg bg-violet-600 px-4 py-1.5 text-white">Saved</span>
             <Link href="/registered"
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
                          hover:border-violet-400 hover:text-violet-600 transition
-                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400">
+                         dark:border-violet-900/50 dark:text-violet-300/70 dark:hover:border-violet-500
+                         dark:hover:text-violet-300">
               Going
             </Link>
             <Link href="/friends"
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
                          hover:border-violet-400 hover:text-violet-600 transition
-                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400">
+                         dark:border-violet-900/50 dark:text-violet-300/70 dark:hover:border-violet-500
+                         dark:hover:text-violet-300">
               Friends
             </Link>
             <Link href="/preferences"
               className="rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600
                          hover:border-violet-400 hover:text-violet-600 transition
-                         dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500
-                         dark:hover:text-violet-400">
+                         dark:border-violet-900/50 dark:text-violet-300/70 dark:hover:border-violet-500
+                         dark:hover:text-violet-300">
               ★ Preferences
             </Link>
           </nav>
@@ -162,14 +162,14 @@ export default function SavedEventsPage() {
         {loading && (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-64 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800" />
+              <div key={i} className="h-64 animate-pulse rounded-2xl bg-gray-200 dark:bg-violet-900/20" />
             ))}
           </div>
         )}
 
         {/* ── Empty state ── */}
         {!loading && events.length === 0 && (
-          <div className="mt-16 text-center text-gray-400 dark:text-gray-600">
+          <div className="mt-16 text-center text-gray-400 dark:text-violet-400/50">
             <p className="text-4xl">🔖</p>
             <p className="mt-3 text-lg font-medium">No saved events yet</p>
             <p className="mt-1 text-sm">
@@ -186,7 +186,7 @@ export default function SavedEventsPage() {
         {/* ── Saved events grid ── */}
         {!loading && events.length > 0 && (
           <section>
-            <p className="mb-4 text-sm text-gray-400 dark:text-gray-500">
+            <p className="mb-4 text-sm text-gray-400 dark:text-violet-400/60">
               {events.length} saved event{events.length > 1 ? "s" : ""}
             </p>
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

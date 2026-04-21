@@ -51,7 +51,7 @@ export default function RecommendationsStrip({
         </h2>
         <div className="flex gap-3 overflow-x-auto pb-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-44 w-52 shrink-0 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800" />
+            <div key={i} className="h-44 w-52 shrink-0 animate-pulse rounded-2xl bg-gray-200 dark:bg-violet-900/20" />
           ))}
         </div>
       </div>
@@ -110,17 +110,17 @@ function RecoCard({
       <article
         onClick={() => setDetailOpen(true)}
         className="relative flex w-52 shrink-0 flex-col overflow-hidden rounded-2xl cursor-pointer
-                   border border-gray-100 bg-white shadow-sm hover:shadow-md hover:-translate-y-0.5
-                   transition dark:border-gray-800 dark:bg-gray-900"
+                   border border-violet-100 bg-white shadow-sm hover:shadow-md hover:shadow-violet-500/10 hover:-translate-y-0.5
+                   transition dark:border-violet-900/30 dark:bg-[#1a1730]"
       >
         {/* Image */}
-        <div className="relative h-28 w-full bg-gray-100 dark:bg-gray-800">
+        <div className="relative h-28 w-full bg-gray-100 dark:bg-violet-950/50">
           {event.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={event.image} alt={event.title} className="h-full w-full object-cover"
                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
           ) : (
-            <div className="flex h-full items-center justify-center text-2xl text-gray-300 dark:text-gray-600">🎭</div>
+            <div className="flex h-full items-center justify-center text-2xl text-gray-300 dark:text-violet-800/50">🎭</div>
           )}
 
           {/* Action buttons */}
@@ -155,11 +155,11 @@ function RecoCard({
 
         {/* Body */}
         <div className="flex flex-1 flex-col gap-1 p-2.5">
-          <p className="line-clamp-2 text-xs font-semibold leading-snug text-gray-900 dark:text-white">
+          <p className="line-clamp-2 text-xs font-semibold leading-snug text-gray-900 dark:text-violet-50">
             {event.title || "Untitled event"}
           </p>
           {event.date && (
-            <p className="text-[10px] text-gray-500 dark:text-gray-400">
+            <p className="text-[10px] text-gray-500 dark:text-violet-300/60">
               📅 {new Date(event.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })}
             </p>
           )}

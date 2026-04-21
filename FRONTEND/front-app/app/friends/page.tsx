@@ -152,10 +152,10 @@ export default function FriendsPage() {
     await loadData();
   };
 
-  const navLink = "rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600 hover:border-violet-400 hover:text-violet-600 transition dark:border-gray-700 dark:text-gray-300 dark:hover:border-violet-500 dark:hover:text-violet-400";
+  const navLink = "rounded-lg border border-gray-200 px-4 py-1.5 text-gray-600 hover:border-violet-400 hover:text-violet-600 transition dark:border-violet-900/50 dark:text-violet-300/70 dark:hover:border-violet-500 dark:hover:text-violet-300";
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-3xl px-4 py-16">
 
         {/* ── Header ── */}
@@ -163,10 +163,10 @@ export default function FriendsPage() {
           <div className="flex justify-end mb-2">
             {username && <UserMenu username={username} />}
           </div>
-          <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+          <h1 className="text-5xl font-extrabold tracking-tight text-gray-900 dark:text-violet-50">
             Wanna<span className="text-violet-600">Go</span>
           </h1>
-          <p className="mt-3 text-lg text-gray-500 dark:text-gray-400">Your friends</p>
+          <p className="mt-3 text-lg text-gray-500 dark:text-violet-300/70">Your friends</p>
           <nav className="mt-4 flex justify-center gap-2 text-sm font-medium flex-wrap">
             <Link href="/pages" className={navLink}>List</Link>
             <Link href="/map" className={navLink}>Map</Link>
@@ -187,7 +187,7 @@ export default function FriendsPage() {
               onChange={(e) => { setSearchInput(e.target.value); setRequestStatus(null); }}
               className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm
                          text-gray-900 placeholder-gray-400 focus:border-violet-400 focus:outline-none
-                         dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500
+                         dark:border-violet-900/50 dark:bg-[#1a1730] dark:text-violet-50 dark:placeholder-violet-400/40
                          dark:focus:border-violet-500"
             />
             <button
@@ -209,7 +209,7 @@ export default function FriendsPage() {
         {loading && (
           <div className="space-y-3">
             {[1, 2].map((i) => (
-              <div key={i} className="h-20 animate-pulse rounded-2xl bg-gray-200 dark:bg-gray-800" />
+              <div key={i} className="h-20 animate-pulse rounded-2xl bg-gray-200 dark:bg-violet-900/20" />
             ))}
           </div>
         )}
@@ -252,7 +252,7 @@ export default function FriendsPage() {
                           onClick={() => handleRespond(req.id, "decline")}
                           className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium
                                      text-gray-600 hover:border-red-400 hover:text-red-500 transition
-                                     dark:border-gray-600 dark:text-gray-400"
+                                     dark:border-violet-900/50 dark:text-violet-400/60"
                         >
                           Decline
                         </button>
@@ -266,23 +266,23 @@ export default function FriendsPage() {
             {/* ── Pending sent ── */}
             {data.pending_sent.length > 0 && (
               <section className="mb-8">
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-400">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-400/70">
                   Sent requests
                 </h2>
                 <div className="space-y-2">
                   {data.pending_sent.map((req) => (
                     <div
                       key={req.id}
-                      className="flex items-center justify-between rounded-2xl border border-gray-100
-                                 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900"
+                      className="flex items-center justify-between rounded-2xl border border-violet-100
+                                 bg-white px-4 py-3 dark:border-violet-900/30 dark:bg-[#1a1730]"
                     >
                       <div className="flex items-center gap-3">
                         <div className="flex h-9 w-9 items-center justify-center rounded-full
                                         bg-gray-100 text-sm font-bold text-gray-500
-                                        dark:bg-gray-800 dark:text-gray-400">
+                                        dark:bg-violet-900/30 dark:text-violet-400/70">
                           {req.addressee_username[0].toUpperCase()}
                         </div>
-                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                        <span className="font-medium text-gray-700 dark:text-violet-200/80">
                           {req.addressee_username}
                         </span>
                         <span className="text-xs text-gray-400">pending…</span>
@@ -291,7 +291,7 @@ export default function FriendsPage() {
                         onClick={() => handleRemove(req.id)}
                         className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium
                                    text-gray-500 hover:border-red-400 hover:text-red-500 transition
-                                   dark:border-gray-700 dark:text-gray-400"
+                                   dark:border-violet-900/50 dark:text-violet-400/60"
                       >
                         Cancel
                       </button>
@@ -303,12 +303,12 @@ export default function FriendsPage() {
 
             {/* ── Friends list ── */}
             <section>
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-400">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-400/70">
                 Friends · {data.friends.length}
               </h2>
 
               {data.friends.length === 0 && data.pending_received.length === 0 && data.pending_sent.length === 0 && (
-                <div className="mt-8 text-center text-gray-400 dark:text-gray-600">
+                <div className="mt-8 text-center text-gray-400 dark:text-violet-400/50">
                   <p className="text-4xl">👥</p>
                   <p className="mt-3 font-medium">No friends yet</p>
                   <p className="mt-1 text-sm">Search for a username above to send a request.</p>
@@ -319,8 +319,8 @@ export default function FriendsPage() {
                 {data.friends.map((f) => (
                   <div
                     key={f.friendship_id}
-                    className="rounded-2xl border border-gray-100 bg-white p-4
-                               dark:border-gray-800 dark:bg-gray-900"
+                    className="rounded-2xl border border-violet-100 bg-white p-4
+                               dark:border-violet-900/30 dark:bg-[#1a1730]"
                   >
                     {/* Friend header */}
                     <div className="flex items-center justify-between">
@@ -330,7 +330,7 @@ export default function FriendsPage() {
                                         dark:bg-violet-900 dark:text-violet-300">
                           {f.friend_username[0].toUpperCase()}
                         </div>
-                        <span className="font-semibold text-gray-900 dark:text-white">
+                        <span className="font-semibold text-gray-900 dark:text-violet-50">
                           {f.friend_username}
                         </span>
                       </div>
@@ -346,7 +346,7 @@ export default function FriendsPage() {
 
                     {/* Going events */}
                     {f.going.length > 0 ? (
-                      <div className="mt-3 space-y-1.5 border-t border-gray-100 pt-3 dark:border-gray-800">
+                      <div className="mt-3 space-y-1.5 border-t border-gray-100 pt-3 dark:border-violet-900/30">
                         <p className="text-xs font-medium text-gray-400 mb-2">Going to…</p>
                         {f.going.map((reg, i) => {
                           const ev = reg.event_data as { title?: string; location?: { city?: string; name?: string }; source?: string };
@@ -357,7 +357,7 @@ export default function FriendsPage() {
                                                dark:bg-violet-950 dark:text-violet-300 shrink-0">
                                 📅 {formatVisitDate(reg.visit_date, reg.visit_time)}
                               </span>
-                              <span className="truncate text-sm text-gray-700 dark:text-gray-300">
+                              <span className="truncate text-sm text-gray-700 dark:text-violet-200/80">
                                 {ev.title ?? "Unknown event"}
                               </span>
                               {ev.location?.city && (
@@ -370,7 +370,7 @@ export default function FriendsPage() {
                         })}
                       </div>
                     ) : (
-                      <p className="mt-3 border-t border-gray-100 pt-3 text-xs text-gray-400 dark:border-gray-800">
+                      <p className="mt-3 border-t border-gray-100 pt-3 text-xs text-gray-400 dark:border-violet-900/30">
                         Nothing planned yet
                       </p>
                     )}
@@ -382,7 +382,7 @@ export default function FriendsPage() {
             {/* ── Shared events inbox ── */}
             {shared.received.length > 0 && (
               <section className="mt-8">
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-400">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-400/70">
                   Events sent to you · {shared.received.length}
                 </h2>
                 <div className="space-y-3">
@@ -394,11 +394,11 @@ export default function FriendsPage() {
                         className={`flex gap-3 rounded-2xl border p-4
                           ${item.unread
                             ? "border-violet-300 bg-violet-50 dark:border-violet-800 dark:bg-violet-950/30"
-                            : "border-gray-100 bg-white dark:border-gray-800 dark:bg-gray-900"
+                            : "border-violet-100 bg-white dark:border-violet-900/30 dark:bg-[#1a1730]"
                           }`}
                       >
                         {/* Thumbnail */}
-                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-violet-950/50">
                           {ev.image
                             ? <img src={ev.image} alt={ev.title} className="h-full w-full object-cover"
                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
@@ -420,7 +420,7 @@ export default function FriendsPage() {
                             </p>
                           )}
                           {item.message && (
-                            <p className="mt-1 text-xs italic text-gray-500 dark:text-gray-400 line-clamp-2">
+                            <p className="mt-1 text-xs italic text-gray-500 dark:text-violet-300/70 line-clamp-2">
                               &ldquo;{item.message}&rdquo;
                             </p>
                           )}
@@ -429,7 +429,7 @@ export default function FriendsPage() {
                           onClick={() => handleDeleteShared(item.id)}
                           className="shrink-0 self-start rounded-lg border border-gray-200 px-2 py-1 text-xs
                                      text-gray-400 hover:border-red-400 hover:text-red-500 transition
-                                     dark:border-gray-700"
+                                     dark:border-violet-900/50"
                         >
                           ✕
                         </button>
@@ -443,7 +443,7 @@ export default function FriendsPage() {
             {/* ── Shared events sent ── */}
             {shared.sent.length > 0 && (
               <section className="mt-8">
-                <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-gray-400">
+                <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-400/70">
                   Events you sent · {shared.sent.length}
                 </h2>
                 <div className="space-y-3">
@@ -452,10 +452,10 @@ export default function FriendsPage() {
                     return (
                       <div
                         key={item.id}
-                        className="flex gap-3 rounded-2xl border border-gray-100 bg-white p-4
-                                   dark:border-gray-800 dark:bg-gray-900"
+                        className="flex gap-3 rounded-2xl border border-violet-100 bg-white p-4
+                                   dark:border-violet-900/30 dark:bg-[#1a1730]"
                       >
-                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+                        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-violet-950/50">
                           {ev.image
                             ? <img src={ev.image} alt={ev.title} className="h-full w-full object-cover"
                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
@@ -476,7 +476,7 @@ export default function FriendsPage() {
                             </p>
                           )}
                           {item.message && (
-                            <p className="mt-1 text-xs italic text-gray-500 dark:text-gray-400 line-clamp-2">
+                            <p className="mt-1 text-xs italic text-gray-500 dark:text-violet-300/70 line-clamp-2">
                               &ldquo;{item.message}&rdquo;
                             </p>
                           )}
@@ -485,7 +485,7 @@ export default function FriendsPage() {
                           onClick={() => handleDeleteShared(item.id)}
                           className="shrink-0 self-start rounded-lg border border-gray-200 px-2 py-1 text-xs
                                      text-gray-400 hover:border-red-400 hover:text-red-500 transition
-                                     dark:border-gray-700"
+                                     dark:border-violet-900/50"
                         >
                           ✕
                         </button>

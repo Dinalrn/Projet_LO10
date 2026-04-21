@@ -20,7 +20,7 @@ const SOURCE_COLORS: Record<string, string> = {
   "data.culture.gouv.fr":"bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300",
 };
 function sourceBadgeClass(source: string) {
-  return SOURCE_COLORS[source] ?? "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300";
+  return SOURCE_COLORS[source] ?? "bg-gray-100 text-gray-600 dark:bg-violet-900/40 dark:text-violet-300";
 }
 
 function formatFullDate(date: string, time: string): string {
@@ -81,11 +81,11 @@ export default function EventDetailModal({
       {/* Panel */}
       <div
         className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl
-                   bg-white dark:bg-gray-900 shadow-2xl flex flex-col"
+                   bg-white dark:bg-[#1a1730] shadow-2xl shadow-violet-950/50 flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Hero image ── */}
-        <div className="relative h-64 w-full shrink-0 bg-gray-100 dark:bg-gray-800">
+        <div className="relative h-64 w-full shrink-0 bg-gray-100 dark:bg-violet-950/60">
           {image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -95,7 +95,7 @@ export default function EventDetailModal({
               onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-6xl text-gray-300 dark:text-gray-700 rounded-t-3xl">
+            <div className="flex h-full items-center justify-center text-6xl text-gray-300 dark:text-violet-800/50 rounded-t-3xl">
               🎭
             </div>
           )}
@@ -130,7 +130,7 @@ export default function EventDetailModal({
 
           {/* Title + source badge */}
           <div className="flex items-start justify-between gap-3">
-            <h2 className="text-xl font-bold leading-snug text-gray-900 dark:text-white">
+            <h2 className="text-xl font-bold leading-snug text-gray-900 dark:text-violet-50">
               {title || "Untitled event"}
             </h2>
             <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${sourceBadgeClass(source)}`}>
@@ -140,23 +140,23 @@ export default function EventDetailModal({
 
           {/* Description */}
           {description && (
-            <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300 whitespace-pre-line">
+            <p className="text-sm leading-relaxed text-gray-600 dark:text-violet-200/70 whitespace-pre-line">
               {description}
             </p>
           )}
 
           {/* ── Info grid ── */}
-          <div className="flex flex-col gap-3 rounded-2xl border border-gray-100 dark:border-gray-700
-                          bg-gray-50 dark:bg-gray-800 p-4 text-sm">
+          <div className="flex flex-col gap-3 rounded-2xl border border-violet-100 dark:border-violet-800/30
+                          bg-violet-50/50 dark:bg-violet-950/40 p-4 text-sm">
 
             {/* Date */}
             <div className="flex items-start gap-3">
               <span className="text-lg leading-none mt-0.5">📅</span>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-violet-400/60 mb-0.5">
                   Date
                 </p>
-                <p className="font-medium text-gray-800 dark:text-gray-200 capitalize">
+                <p className="font-medium text-gray-800 dark:text-violet-100 capitalize">
                   {formatFullDate(date, time)}
                 </p>
               </div>
@@ -167,17 +167,17 @@ export default function EventDetailModal({
               <div className="flex items-start gap-3">
                 <span className="text-lg leading-none mt-0.5">📍</span>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-violet-400/60 mb-0.5">
                     Location
                   </p>
                   {location.name && (
-                    <p className="font-medium text-gray-800 dark:text-gray-200">{location.name}</p>
+                    <p className="font-medium text-gray-800 dark:text-violet-100">{location.name}</p>
                   )}
                   {location.city && (
-                    <p className="text-gray-600 dark:text-gray-400">{location.city}</p>
+                    <p className="text-gray-600 dark:text-violet-300/70">{location.city}</p>
                   )}
                   {hasCoords && (
-                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+                    <p className="text-[11px] text-gray-400 dark:text-violet-400/60 mt-0.5">
                       {parseFloat(location.lat).toFixed(5)}°N, {parseFloat(location.lon).toFixed(5)}°E
                     </p>
                   )}
@@ -203,10 +203,10 @@ export default function EventDetailModal({
             <div className="flex items-start gap-3">
               <span className="text-lg leading-none mt-0.5">🎟️</span>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-0.5">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-violet-400/60 mb-0.5">
                   Price
                 </p>
-                <p className="font-medium text-gray-800 dark:text-gray-200">
+                <p className="font-medium text-gray-800 dark:text-violet-100">
                   {price > 0 ? `${price} €` : "Free admission"}
                 </p>
               </div>
@@ -223,7 +223,7 @@ export default function EventDetailModal({
                             transition disabled:opacity-50
                             ${isSaved
                               ? "bg-violet-600 text-white hover:bg-violet-700"
-                              : "border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-violet-400 hover:text-violet-600 dark:hover:border-violet-500 dark:hover:text-violet-400"
+                              : "border border-gray-200 dark:border-violet-800/50 text-gray-700 dark:text-violet-300 hover:border-violet-400 hover:text-violet-600 dark:hover:border-violet-500 dark:hover:text-violet-300"
                             }`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4"
@@ -240,7 +240,7 @@ export default function EventDetailModal({
                 className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
                             ${isRegistered
                               ? "bg-violet-600 text-white hover:bg-violet-700"
-                              : "border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-violet-400 hover:text-violet-600 dark:hover:border-violet-500 dark:hover:text-violet-400"
+                              : "border border-gray-200 dark:border-violet-800/50 text-gray-700 dark:text-violet-300 hover:border-violet-400 hover:text-violet-600 dark:hover:border-violet-500 dark:hover:text-violet-300"
                             }`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4"
@@ -257,8 +257,8 @@ export default function EventDetailModal({
             {onShare && (
               <button
                 onClick={() => { onShare(event); onClose(); }}
-                className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700
-                           px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300
+                className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-violet-800/50
+                           px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-violet-300
                            hover:border-violet-400 hover:text-violet-600 dark:hover:border-violet-500
                            dark:hover:text-violet-400 transition"
               >
