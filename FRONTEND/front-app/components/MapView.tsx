@@ -20,6 +20,7 @@ const SOURCE_COLORS: Record<string, string> = {
 };
 
 export { OVERLAY_COLORS } from "@/lib/map-colors";
+import { OVERLAY_COLORS } from "@/lib/map-colors";
 
 function pinColor(source: string): string {
   return SOURCE_COLORS[source] ?? "#6b7280";
