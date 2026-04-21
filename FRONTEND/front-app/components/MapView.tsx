@@ -19,11 +19,7 @@ const SOURCE_COLORS: Record<string, string> = {
   "data.culture.gouv.fr": "#ec4899",
 };
 
-export const OVERLAY_COLORS = {
-  saved:       "#f59e0b", // amber-400
-  registered:  "#7c3aed", // violet-600
-  friends:     "#0d9488", // teal-600
-} as const;
+export { OVERLAY_COLORS } from "@/lib/map-colors";
 
 function pinColor(source: string): string {
   return SOURCE_COLORS[source] ?? "#6b7280";

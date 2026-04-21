@@ -34,9 +34,9 @@ export default function SearchBar({ onSearch, loading, radius = 30, onRadiusChan
           className="flex-1 rounded-xl border border-gray-200 bg-white px-5 py-3 text-gray-900
                      placeholder-gray-400 shadow-sm outline-none ring-0
                      focus:border-violet-500 focus:ring-2 focus:ring-violet-200
-                     dark:border-gray-700 dark:bg-gray-900 dark:text-white
-                     dark:placeholder-gray-500 dark:focus:border-violet-400
-                     dark:focus:ring-violet-900 disabled:opacity-50 transition"
+                     dark:border-violet-800/50 dark:bg-[#1a1730] dark:text-violet-50
+                     dark:placeholder-violet-400/40 dark:focus:border-violet-500
+                     dark:focus:ring-violet-900/50 disabled:opacity-50 transition"
         />
         <button
           onClick={submit}
@@ -58,7 +58,7 @@ export default function SearchBar({ onSearch, loading, radius = 30, onRadiusChan
 
       {/* Radius slider */}
       <div className="flex items-center gap-3 px-1">
-        <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">5 km</span>
+        <span className="text-xs text-gray-400 dark:text-violet-400/50 shrink-0">5 km</span>
         <input
           type="range"
           min={5}
@@ -69,7 +69,7 @@ export default function SearchBar({ onSearch, loading, radius = 30, onRadiusChan
           disabled={loading}
           className="flex-1 accent-violet-600 disabled:opacity-50"
         />
-        <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">50 km</span>
+        <span className="text-xs text-gray-400 dark:text-violet-400/50 shrink-0">50 km</span>
         <span className="text-xs font-semibold text-violet-600 w-14 text-right shrink-0">
           {radius} km
         </span>

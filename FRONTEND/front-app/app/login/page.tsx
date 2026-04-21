@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type Mode = "login" | "register";
 
@@ -218,9 +219,17 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-xs text-gray-600">
-          By using WannaGo you agree to our imaginary terms of service.
-        </p>
+        <div className="mt-5 flex flex-col items-center gap-2">
+          <Link
+            href="/explore"
+            className="text-sm font-medium text-violet-400 hover:text-violet-300 transition"
+          >
+            Try without an account →
+          </Link>
+          <p className="text-center text-xs text-gray-600">
+            By using WannaGo you agree to our imaginary terms of service.
+          </p>
+        </div>
       </div>
     </main>
   );

@@ -24,7 +24,7 @@ const SOURCE_COLORS: Record<string, string> = {
 function sourceBadgeClass(source: string): string {
   return (
     SOURCE_COLORS[source] ??
-    "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+    "bg-gray-100 text-gray-600 dark:bg-violet-900/40 dark:text-violet-300"
   );
 }
 
@@ -116,11 +116,11 @@ export default function EventCard({ event, isSaved = false, onToggleSave, isRegi
     )}
     <article
       onClick={() => setDetailOpen(true)}
-      className="flex flex-col overflow-hidden rounded-2xl border border-gray-100
-                 bg-white shadow-sm transition hover:shadow-md hover:-translate-y-0.5
-                 cursor-pointer dark:border-gray-800 dark:bg-gray-900">
+      className="flex flex-col overflow-hidden rounded-2xl border border-violet-100
+                 bg-white shadow-sm transition hover:shadow-md hover:shadow-violet-500/10 hover:-translate-y-0.5
+                 cursor-pointer dark:border-violet-900/30 dark:bg-[#1a1730]">
       {/* Image */}
-      <div className="relative h-40 w-full bg-gray-100 dark:bg-gray-800">
+      <div className="relative h-40 w-full bg-gray-100 dark:bg-violet-950/50">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -132,7 +132,7 @@ export default function EventCard({ event, isSaved = false, onToggleSave, isRegi
             }}
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-3xl text-gray-300 dark:text-gray-600">
+          <div className="flex h-full items-center justify-center text-3xl text-gray-300 dark:text-violet-800/50">
             🎭
           </div>
         )}
@@ -212,17 +212,17 @@ export default function EventCard({ event, isSaved = false, onToggleSave, isRegi
 
       {/* Body */}
       <div className="flex flex-1 flex-col gap-2 p-4">
-        <h2 className="line-clamp-2 text-sm font-semibold leading-snug text-gray-900 dark:text-white">
+        <h2 className="line-clamp-2 text-sm font-semibold leading-snug text-gray-900 dark:text-violet-50">
           {title || "Untitled event"}
         </h2>
 
         {description && (
-          <p className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+          <p className="line-clamp-2 text-xs text-gray-500 dark:text-violet-300/60">
             {description}
           </p>
         )}
 
-        <div className="mt-auto flex flex-col gap-1 pt-2 text-xs text-gray-500 dark:text-gray-400">
+        <div className="mt-auto flex flex-col gap-1 pt-2 text-xs text-gray-500 dark:text-violet-300/70">
           <div className="flex items-center gap-1.5">
             <span>📅</span>
             <span>{formatDate(date, time)}</span>

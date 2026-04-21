@@ -9,7 +9,7 @@ import { fetchEvents } from "@/lib/api";
 import { saveSearch, loadSearch } from "@/lib/search-store";
 import { Event, Registration, FriendEventLayer, SourceStat } from "@/types/event";
 import { MapLegend } from "@/components/MapLegend";
-import { OVERLAY_COLORS } from "@/components/MapView";
+import { OVERLAY_COLORS } from "@/lib/map-colors";
 import LocateButton from "@/components/LocateButton";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
@@ -130,7 +130,7 @@ export default function MapPage() {
       >
         {label}
         <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold
-                          ${active ? "bg-white/25" : "bg-gray-900/10"}`}>
+                          ${active ? "bg-white/25" : "bg-violet-950/20"}`}>
           {count}
         </span>
       </button>
@@ -138,10 +138,10 @@ export default function MapPage() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-gray-950">
+    <div className="flex h-screen flex-col bg-[#0f0d1e]">
 
       {/* ── Top bar ── */}
-      <header className="flex flex-col gap-2 px-4 py-3 border-b border-gray-800 bg-gray-900 shrink-0">
+      <header className="flex flex-col gap-2 px-4 py-3 border-b border-violet-900/40 bg-[#1a1730] shrink-0">
 
         {/* Row 1: brand · nav · search · user · stats */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -151,24 +151,24 @@ export default function MapPage() {
             </span>
             <nav className="flex gap-1 text-xs font-medium">
               <Link href="/pages"
-                className="rounded-lg px-3 py-1.5 text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                className="rounded-lg px-3 py-1.5 text-violet-300/60 hover:bg-violet-900/40 hover:text-white transition">
                 List
               </Link>
               <span className="rounded-lg bg-violet-600 px-3 py-1.5 text-white">Map</span>
               <Link href="/saved"
-                className="rounded-lg px-3 py-1.5 text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                className="rounded-lg px-3 py-1.5 text-violet-300/60 hover:bg-violet-900/40 hover:text-white transition">
                 Saved
               </Link>
               <Link href="/registered"
-                className="rounded-lg px-3 py-1.5 text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                className="rounded-lg px-3 py-1.5 text-violet-300/60 hover:bg-violet-900/40 hover:text-white transition">
                 Going
               </Link>
               <Link href="/friends"
-                className="rounded-lg px-3 py-1.5 text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                className="rounded-lg px-3 py-1.5 text-violet-300/60 hover:bg-violet-900/40 hover:text-white transition">
                 Friends
               </Link>
               <Link href="/preferences"
-                className="rounded-lg px-3 py-1.5 text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                className="rounded-lg px-3 py-1.5 text-violet-300/60 hover:bg-violet-900/40 hover:text-white transition">
                 ★ Preferences
               </Link>
             </nav>
@@ -179,19 +179,17 @@ export default function MapPage() {
             <LocateButton onLocate={handleSearch} compact />
           </div>
 
-          {username && <div className="shrink-0"><UserMenu username={username} /></div>}
-
-          {searched && !loading && (
-            <div className="text-xs text-gray-400 shrink-0">
-              {mappedCount} / {events.length} event{events.length !== 1 ? "s" : ""} on map
-              {city && <span className="ml-1 font-semibold text-gray-300">· {city}</span>}
+          {username && (
+            <div className="shrink-0 ml-auto">
+              <UserMenu username={username} />
             </div>
           )}
+
         </div>
 
         {/* Row 2: overlay toggles */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-500 mr-1">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-violet-400/60 mr-1">
             Show:
           </span>
           <ToggleBtn
@@ -215,6 +213,14 @@ export default function MapPage() {
             label="👥 Friends going"
             count={friendsEvents.length}
           />
+
+
+          {searched && !loading && (
+            <div className="ml-auto text-xs text-violet-300/60 shrink-0">
+              {mappedCount} / {events.length} event{events.length !== 1 ? "s" : ""} on map
+              {city && <span className="ml-1 font-semibold text-violet-200">· {city}</span>}
+            </div>
+          )}
         </div>
       </header>
 
@@ -237,7 +243,7 @@ export default function MapPage() {
         {/* Loading */}
         {loading && (
           <div className="absolute inset-0 z-[999] flex items-center justify-center
-                          bg-gray-950/60 backdrop-blur-sm">
+                          bg-[#0f0d1e]/70 backdrop-blur-sm">
             <div className="flex flex-col items-center gap-3 text-white">
               <svg className="h-8 w-8 animate-spin" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth={2}>
@@ -260,18 +266,18 @@ export default function MapPage() {
         {/* Empty state */}
         {searched && !loading && !error && mappedCount === 0 && events.length === 0 && (
           <div className="absolute inset-0 z-[998] flex items-center justify-center pointer-events-none">
-            <div className="rounded-2xl bg-gray-900/80 px-8 py-6 text-center text-white backdrop-blur-sm">
+            <div className="rounded-2xl bg-[#1a1730]/90 px-8 py-6 text-center text-white backdrop-blur-sm border border-violet-900/40">
               <p className="text-3xl">🔍</p>
               <p className="mt-2 font-semibold">No events found in &ldquo;{city}&rdquo;</p>
-              <p className="mt-1 text-sm text-gray-400">Try a bigger city or different spelling.</p>
+              <p className="mt-1 text-sm text-violet-300/60">Try a bigger city or different spelling.</p>
             </div>
           </div>
         )}
 
         {/* Some without coords */}
         {searched && !loading && events.length > 0 && mappedCount < events.length && (
-          <div className="absolute bottom-6 left-4 z-[1000] rounded-lg border border-gray-700
-                          bg-gray-900/80 px-3 py-1.5 text-xs text-gray-400 backdrop-blur-sm">
+          <div className="absolute bottom-6 left-4 z-[1000] rounded-lg border border-violet-900/50
+                          bg-[#1a1730]/90 px-3 py-1.5 text-xs text-violet-300/70 backdrop-blur-sm">
             {events.length - mappedCount} event{events.length - mappedCount !== 1 ? "s" : ""} without location hidden
           </div>
         )}
