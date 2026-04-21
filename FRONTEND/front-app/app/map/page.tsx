@@ -9,7 +9,7 @@ import { fetchEvents } from "@/lib/api";
 import { saveSearch, loadSearch } from "@/lib/search-store";
 import { Event, Registration, FriendEventLayer, SourceStat } from "@/types/event";
 import { MapLegend } from "@/components/MapLegend";
-import { OVERLAY_COLORS } from "@/components/MapView";
+import { OVERLAY_COLORS } from "@/lib/map-colors";
 import LocateButton from "@/components/LocateButton";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
@@ -179,14 +179,12 @@ export default function MapPage() {
             <LocateButton onLocate={handleSearch} compact />
           </div>
 
-          {username && <div className="shrink-0"><UserMenu username={username} /></div>}
-
-          {searched && !loading && (
-            <div className="text-xs text-violet-300/60 shrink-0">
-              {mappedCount} / {events.length} event{events.length !== 1 ? "s" : ""} on map
-              {city && <span className="ml-1 font-semibold text-violet-200">· {city}</span>}
+          {username && (
+            <div className="shrink-0 ml-auto">
+              <UserMenu username={username} />
             </div>
           )}
+
         </div>
 
         {/* Row 2: overlay toggles */}
@@ -215,6 +213,14 @@ export default function MapPage() {
             label="👥 Friends going"
             count={friendsEvents.length}
           />
+
+
+          {searched && !loading && (
+            <div className="ml-auto text-xs text-violet-300/60 shrink-0">
+              {mappedCount} / {events.length} event{events.length !== 1 ? "s" : ""} on map
+              {city && <span className="ml-1 font-semibold text-violet-200">· {city}</span>}
+            </div>
+          )}
         </div>
       </header>
 
