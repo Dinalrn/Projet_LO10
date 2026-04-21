@@ -21,9 +21,12 @@ export default function UserMenu({ username }: Props) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="rounded-lg bg-violet-600 px-4 py-2 text-white font-semibold">
+      <Link
+        href="/profile"
+        className="rounded-lg bg-violet-600 px-4 py-2 text-white font-semibold hover:bg-violet-700 transition"
+      >
         {username}
-      </span>
+      </Link>
       <button
         onClick={handleLogout}
         disabled={loading}
