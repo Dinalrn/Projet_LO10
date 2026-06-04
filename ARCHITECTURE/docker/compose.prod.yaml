@@ -1,0 +1,82 @@
+version: "3.8"
+
+services:
+
+  backend-api-service:
+    image: lo10/backend-api:latest
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis-service
+    env_file:
+      - ./BACKEND_API/.env
+    environment:
+      DEBUG: "False"
+      REDIS_HOST: redis-service
+      REDIS_PORT: "6379"
+    networks:
+      - template-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  frontend-service:
+    image: lo10/frontend:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres-service
+      - redis-service
+    networks:
+      - template-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  redis-service:
+    image: redis:7-alpine
+    networks:
+      - template-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  postgres-service:
+    image: postgres:15.1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: application_database
+    volumes:
+      - postgres_service_data:/var/lib/postgresql/data
+      - ./INFRA/init-scripts/postgres-init-script.sql:/docker-entrypoint-initdb.d/postgres-init-script.sql:ro
+    networks:
+      - template-network
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+      restart_policy:
+        condition: on-failure
+
+  adminer:
+    image: adminer
+    ports:
+      - "8090:8080"
+    depends_on:
+      - postgres-service
+    networks:
+      - template-network
+    deploy:
+      replicas: 1
+
+networks:
+  template-network:
+    driver: overlay
+
+volumes:
+  postgres_service_data:
