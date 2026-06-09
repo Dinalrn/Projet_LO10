@@ -55,7 +55,7 @@ export async function getSession(): Promise<SessionPayload | null> {
 export const cookieOptions = {
   name: COOKIE_NAME,
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  secure: process.env.NODE_ENV === "production" && process.env.COOKIE_SECURE !== "false",
   sameSite: "lax" as const,
   path: "/",
   maxAge: EXPIRES_SECONDS,
