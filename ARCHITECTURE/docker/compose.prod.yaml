@@ -1,7 +1,9 @@
+# DOCKER-COMPOSE FILE : PROD ENVIRONMENT (Swarm)
 version: "3.8"
 
 services:
 
+  # BACKEND API
   backend-api-service:
     image: lo10/backend-api:latest
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
@@ -10,7 +12,7 @@ services:
     depends_on:
       - redis-service
     env_file:
-      - ./BACKEND_API/.env
+      - ../../BACKEND_API/.env
     environment:
       DEBUG: "False"
       REDIS_HOST: redis-service
@@ -22,10 +24,13 @@ services:
       restart_policy:
         condition: on-failure
 
+  # FRONTEND
   frontend-service:
     image: lo10/frontend:latest
     ports:
       - "3000:3000"
+    env_file:
+      - ../../FRONTEND/.env
     depends_on:
       - postgres-service
       - redis-service
@@ -36,6 +41,7 @@ services:
       restart_policy:
         condition: on-failure
 
+  # CACHE
   redis-service:
     image: redis:7-alpine
     networks:
@@ -45,6 +51,7 @@ services:
       restart_policy:
         condition: on-failure
 
+  # DATABASE
   postgres-service:
     image: postgres:15.1
     environment:
@@ -53,7 +60,7 @@ services:
       POSTGRES_DB: application_database
     volumes:
       - postgres_service_data:/var/lib/postgresql/data
-      - ./INFRA/init-scripts/postgres-init-script.sql:/docker-entrypoint-initdb.d/postgres-init-script.sql:ro
+      - ../init-scripts/postgres-init-script.sql:/docker-entrypoint-initdb.d/postgres-init-script.sql:ro
     networks:
       - template-network
     deploy:
@@ -63,7 +70,8 @@ services:
       restart_policy:
         condition: on-failure
 
-  adminer:
+  # DB UI
+  adminer-wannago:
     image: adminer
     ports:
       - "8090:8080"
