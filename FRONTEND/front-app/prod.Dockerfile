@@ -5,6 +5,13 @@ COPY package.json package-lock.json* ./
 RUN npm install --frozen-lockfile --force
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+# Placeholder values satisfy module-level checks during static analysis at build time.
+# Real values are injected at runtime via compose env_file and override these.
+ENV DATABASE_URL=postgresql://build-placeholder:x@localhost:5432/placeholder
+ENV JWT_SECRET_KEY=build-placeholder
+ENV BACKEND_URL=http://localhost:8000
+ENV AUTH_USERNAME=build
+ENV AUTH_PASSWORD=build
 RUN npm run build
 
 # STEP 2 : Runtime
