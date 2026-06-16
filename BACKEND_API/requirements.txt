@@ -7,4 +7,5 @@ python-jose
 passlib[bcrypt]
 jinja2
 requests
+httpx
 redis

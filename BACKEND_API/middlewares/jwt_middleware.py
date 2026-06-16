@@ -15,7 +15,11 @@ EXCLUDED_PATHS = {
     "/docs",
     "/redoc",
     "/openapi.json",
+    "/translate",
 }
+
+# Routes under these prefixes skip JWT entirely (they carry their own auth).
+EXCLUDED_PREFIXES = {"/api/v1/public/"}
 
 
 async def jwt_auth_middleware(request: Request, call_next):
@@ -25,8 +29,8 @@ async def jwt_auth_middleware(request: Request, call_next):
 
     path = request.url.path
 
-    # Skip auth for excluded routes
-    if path in EXCLUDED_PATHS:
+    # Skip auth for excluded routes and public-API prefix
+    if path in EXCLUDED_PATHS or any(path.startswith(p) for p in EXCLUDED_PREFIXES):
         return await call_next(request)
 
     auth_header = request.headers.get("Authorization")

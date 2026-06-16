@@ -34,6 +34,16 @@ class settings :
     # OpenWeatherMap – free tier (2.5)
     OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
 
+    # DeepL Free tier
+    DEEPL_API_KEY = os.getenv("DEEPL_API_KEY")
+    DEEPL_BASE_URL = "https://api-free.deepl.com/v2/translate"
+
+    # Brevo transactional email
+    BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+
+    # Public producer API
+    PUBLIC_API_KEY = os.getenv("PUBLIC_API_KEY")
+
 # env secret class
 class secrets :
     postgre_pswd = "postgres" # passé tout en os.getenv()
