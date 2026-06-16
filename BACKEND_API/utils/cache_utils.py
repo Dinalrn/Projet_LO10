@@ -22,13 +22,17 @@ def get_client() -> redis.Redis:
 NAMESPACE_LIMITS: dict[str, int] = {
     "weather":         20,
     "events":          20,
-    "recommendations": 50,  # per-user entries, more variety needed
+    "recommendations": 50,   # per-user entries, more variety needed
+    "translate":       500,  # text is lightweight; keep many entries
+    "public_api":      200,  # one entry per event_id/user_id × query type
 }
 
 NAMESPACE_TTL: dict[str, int] = {
-    "weather":         1800,  # 30 min
-    "events":          7200,  # 2 h
-    "recommendations":  900,  # 15 min — personalised, refreshes as behaviour changes
+    "weather":         1800,   # 30 min
+    "events":          7200,   # 2 h
+    "recommendations":  900,   # 15 min — personalised, refreshes as behaviour changes
+    "translate":       86400,  # 24 h — translations are stable
+    "public_api":       300,  # 5 min — social stats refresh frequently
 }
 
 

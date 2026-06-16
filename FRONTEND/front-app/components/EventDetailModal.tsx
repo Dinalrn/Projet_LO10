@@ -13,6 +13,8 @@ interface Props {
   onClose: () => void;
 }
 
+const FRENCH_SOURCES = new Set(["datatourisme", "openagenda", "data.culture.gouv.fr"]);
+
 const SOURCE_COLORS: Record<string, string> = {
   ticketmaster:          "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
   datatourisme:          "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
@@ -48,6 +50,46 @@ export default function EventDetailModal({
 }: Props) {
   const { title, description, category, date, time, location, price, image, source } = event;
   const [saving, setSaving] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  const [translated, setTranslated] = useState<{ title: string; description: string } | null>(null);
+  // undefined = not yet fetched; null = no email in session; string = email
+  const [userEmail, setUserEmail] = useState<string | null | undefined>(undefined);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+  const [sendState, setSendState] = useState<"idle" | "sending" | "sent">("idle");
+
+  const isFrenchSource = FRENCH_SOURCES.has(source);
+  const displayTitle = translated?.title ?? title;
+  const displayDescription = translated?.description ?? description;
+
+  const handleTranslate = async () => {
+    setTranslating(true);
+    try {
+      const requests = [
+        fetch("/api/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: title, target_lang: "EN" }),
+        }).then((r) => r.json()),
+        description
+          ? fetch("/api/translate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text: description, target_lang: "EN" }),
+            }).then((r) => r.json())
+          : Promise.resolve({ translated_text: "" }),
+      ];
+      const [titleRes, descRes] = await Promise.all(requests);
+      setTranslated({
+        title: titleRes.translated_text || title,
+        description: descRes.translated_text || description,
+      });
+    } catch {
+      // silently keep original text on network error
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   // Close on Escape
   useEffect(() => {
@@ -61,6 +103,41 @@ export default function EventDetailModal({
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
   }, []);
+
+  // Fetch current user email once on open
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setUserEmail(typeof d.email === "string" && d.email ? d.email : null))
+      .catch(() => setUserEmail(null));
+  }, []);
+
+  const triggerSend = (recipientEmail: string | null) => {
+    setSendState("sending");
+    setShowEmailForm(false);
+    fetch("/api/mail/send-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event_data: event, recipient_email: recipientEmail }),
+    })
+      .then((r) => {
+        if (r.ok) {
+          setSendState("sent");
+          setTimeout(() => setSendState("idle"), 3000);
+        } else {
+          setSendState("idle");
+        }
+      })
+      .catch(() => setSendState("idle"));
+  };
+
+  const handleEmailButtonClick = () => {
+    if (userEmail) {
+      triggerSend(null); // backend resolves email via DB
+    } else {
+      setShowEmailForm((prev) => !prev);
+    }
+  };
 
   const handleSave = async () => {
     if (!onToggleSave) return;
@@ -131,7 +208,7 @@ export default function EventDetailModal({
           {/* Title + source badge */}
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-xl font-bold leading-snug text-gray-900 dark:text-violet-50">
-              {title || "Untitled event"}
+              {displayTitle || "Untitled event"}
             </h2>
             <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium ${sourceBadgeClass(source)}`}>
               {source}
@@ -139,9 +216,9 @@ export default function EventDetailModal({
           </div>
 
           {/* Description */}
-          {description && (
+          {displayDescription && (
             <p className="text-sm leading-relaxed text-gray-600 dark:text-violet-200/70 whitespace-pre-line">
-              {description}
+              {displayDescription}
             </p>
           )}
 
@@ -213,8 +290,36 @@ export default function EventDetailModal({
             </div>
           </div>
 
-          {/* ── Action buttons ── */}
-          <div className="flex flex-wrap gap-2 pt-1">
+          {/* ── Action buttons + inline email form ── */}
+          <div className="flex flex-col gap-2 pt-1">
+            <div className="flex flex-wrap gap-2">
+            {/* TRANSLATE BUTTON — disabled until DeepL API key is configured.
+                To re-enable: remove this comment block and restore the JSX below.
+            {isFrenchSource && (
+              translated ? (
+                <button
+                  onClick={() => setTranslated(null)}
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-violet-800/50
+                             px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-violet-300
+                             hover:border-violet-400 hover:text-violet-600 dark:hover:border-violet-500
+                             dark:hover:text-violet-400 transition"
+                >
+                  🇫🇷 Voir en français
+                </button>
+              ) : (
+                <button
+                  onClick={handleTranslate}
+                  disabled={translating}
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-violet-800/50
+                             px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-violet-300
+                             hover:border-violet-400 hover:text-violet-600 dark:hover:border-violet-500
+                             dark:hover:text-violet-400 transition disabled:opacity-50"
+                >
+                  {translating ? "Translating..." : "🌐 Translate to English"}
+                </button>
+              )
+            )}
+            */}
             {onToggleSave && (
               <button
                 onClick={handleSave}
@@ -269,6 +374,52 @@ export default function EventDetailModal({
                 Send to a friend
               </button>
             )}
+
+            {/* ── Email button ── */}
+            <button
+              onClick={handleEmailButtonClick}
+              disabled={sendState !== "idle" || userEmail === undefined}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+                          transition disabled:opacity-50
+                          ${sendState === "sent"
+                            ? "bg-green-600 text-white"
+                            : "border border-gray-200 dark:border-violet-800/50 text-gray-700 dark:text-violet-300 hover:border-violet-400 hover:text-violet-600 dark:hover:border-violet-500 dark:hover:text-violet-400"
+                          }`}
+            >
+              {sendState === "sent"
+                ? "✅ Email sent!"
+                : sendState === "sending"
+                  ? "Sending..."
+                  : "📧 Receive details by email"}
+            </button>
+            </div>
+
+          {/* Inline email form — shown when user has no email in session */}
+          {showEmailForm && sendState === "idle" && (
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && emailInput.trim()) triggerSend(emailInput.trim());
+                }}
+                placeholder="your@email.com"
+                className="flex-1 rounded-xl border border-gray-200 dark:border-violet-800/50
+                           bg-white dark:bg-violet-950/40 px-3 py-2 text-sm
+                           text-gray-900 dark:text-violet-100
+                           focus:outline-none focus:border-violet-400 dark:focus:border-violet-500"
+              />
+              <button
+                onClick={() => { if (emailInput.trim()) triggerSend(emailInput.trim()); }}
+                disabled={!emailInput.trim()}
+                className="rounded-xl bg-violet-600 text-white px-4 py-2 text-sm font-semibold
+                           hover:bg-violet-700 transition disabled:opacity-50"
+              >
+                Send
+              </button>
+            </div>
+          )}
           </div>
         </div>
       </div>

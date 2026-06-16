@@ -4,6 +4,9 @@
 from routes.events import router as events_router
 from routes.weather import router as weather_router
 from routes.recommendations import router as recommendations_router
+from routes.translate import router as translate_router
+from routes.mail import router as mail_router
+from routes.public_api import router as public_api_router
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -100,6 +103,9 @@ app.include_router(auth_router)
 app.include_router(events_router)
 app.include_router(weather_router)
 app.include_router(recommendations_router)
+app.include_router(translate_router)
+app.include_router(mail_router)
+app.include_router(public_api_router)
 
 
 
